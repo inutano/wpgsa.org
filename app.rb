@@ -11,7 +11,6 @@ require 'sass'
 require 'open-uri'
 require 'net/http'
 require 'json'
-require 'lib/pj'
 require 'fileutils'
 
 ENV["DATABASE_URL"] ||= "sqlite3:database.sqlite"
@@ -33,8 +32,8 @@ class WPGSA < Sinatra::Base
     sass params[:source].intern
   end
 
-  get "/index" do
-    haml :about
+  get "/" do
+    haml :index
   end
 
   post "/wpgsa/result" do
