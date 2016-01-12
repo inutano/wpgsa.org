@@ -48,14 +48,16 @@
             .panel-heading{ id: "userDataInputPanel" }
               %h4.panel-title= "Upload your transcriptome data"
             .panel-body
-              %form
+              %form{ action: "/wpgsa/result", method: "post", enctype: "multipart/form-data" }
                 .panel-input.userData
                   .form-group.panel-input-textarea
-                    %textarea.form-control{ name: "userData", id: "userData", rows: 8, cols: 50, placeholder: "Click the button below to try with example data."}
+                    /
+                      %textarea.form-control{ name: "userData", id: "userData", rows: 8, cols: 50, placeholder: "Click the button below to try with example data."}
                   %row
                     .col-md-7
                       .form-group
-                        %input{ type: "file", id: "userDataFile" }
+                        %input{ type: "file", name: "file", id: "userDataFile" }
+                        %input{ type: "submit", name: "submit", id: "userDataFile" }
                         %p.help-block
                           Choose local file
                     .col-md-4.col-md-offset-1

@@ -1,34 +1,34 @@
 require 'securerandom'
 require 'fileutils'
-require 'rake'
 
 module WPGSA
   class Docker
     def initialize(input_file, workdir, network_file) # file object from params[:file]
       @fname   = input_file[:filename]
       @input   = input_file[:tempfile].read
-      @workdir = init_workdir(workdir)
+      @datadir = init_datadir(workdir)
       @network_file = network_file
+      @network_fname = @network_file.split("/").last
       staging
     end
 
-    def init_workdir
-      workdir = File.join(__dir__, "../../tmp", SecureRandom.uuid)
-      FileUtils.mkdir_p(workdir) if !File.exist?(workdir)
-      workdir
+    def init_datadir(workdir)
+      datadir = File.join(workdir, SecureRandom.uuid)
+      FileUtils.mkdir_p(datadir)
+      datadir
     end
 
     def staging
-      FileUtils.cp(@network_file, @workdir)
-      open(File.join(@workdir, @fname), "w"){|f| f.puts(@input) }
-    end
-
-    def network_filename
-      @network_file.split("/").last
+      FileUtils.cp(@network_file, @datadir)
+      open(File.join(@datadir, @fname), "w"){|f| f.puts(@input) }
     end
 
     def run
-      sh "docker run -it -v #{workdir}:/data inutano/wpgsa wpgsa --logfc-file /data/#{@fname} --network-file /data/#{network_filename}"
+      `docker run -it -v #{@datadir}:/data inutano/wpgsa wpgsa --logfc-file /data/#{@fname} --network-file /data/#{@network_fname}`
+    end
+
+    def clean
+      FileUtils.rm(File.join(@datadir, @network_fname))
     end
   end
 end
