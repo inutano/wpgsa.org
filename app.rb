@@ -8,6 +8,8 @@ require 'sinatra'
 require 'haml'
 require 'sass'
 
+require 'lib/wpgsa'
+
 class WpgsaApp < Sinatra::Base
   helpers do
     def app_root
