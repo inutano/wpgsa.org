@@ -1,0 +1,2 @@
+workdir: "/tmp"
+network_file: "/path/to/merged_mouse_150904_trim.network"

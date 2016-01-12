@@ -7,6 +7,7 @@ $LOAD_PATH << File.join(__dir__, "lib")
 require 'sinatra'
 require 'haml'
 require 'sass'
+require 'yaml'
 
 require 'lib/wpgsa'
 
@@ -18,6 +19,7 @@ class WpgsaApp < Sinatra::Base
   end
 
   configure do
+    set :config, YAML.load_file("./config.yaml")
   end
 
   get "/:source.css" do
@@ -29,6 +31,12 @@ class WpgsaApp < Sinatra::Base
   end
 
   post "/wpgsa/result" do
+    if params[:file]
+      workdir = settings.config["workdir"]
+      network_file = settings.config["network_file"]
+      d = WPGSA::Docker.new(params[:file], workdir, network_file)
+      d.run
+    end
   end
 
   not_found do
