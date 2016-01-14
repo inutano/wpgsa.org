@@ -34,7 +34,7 @@ module WPGSA
 
     def wpgsa_results
       run
-      Dir.glob("#{@datadir}/*")
+      Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
     end
   end
 end
