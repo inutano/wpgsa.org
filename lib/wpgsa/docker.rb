@@ -3,17 +3,16 @@ require 'fileutils'
 
 module WPGSA
   class Docker
-    def initialize(input_file, workdir, network_file) # file object from params[:file]
+    def initialize(input_file, network_file_path) # file object from params[:file]
       @fname   = input_file[:filename]
       @input   = input_file[:tempfile].read
-      @datadir = init_datadir(workdir)
-      @network_file = network_file
-      @network_fname = @network_file.split("/").last
+      @datadir = init_datadir
+      @network_file = network_file_path
       staging
     end
 
-    def init_datadir(workdir)
-      datadir = File.join(workdir, SecureRandom.uuid)
+    def init_datadir
+      datadir = File.join(__dir__, "../../public/data", SecureRandom.uuid)
       FileUtils.mkdir_p(datadir)
       datadir
     end
@@ -24,11 +23,12 @@ module WPGSA
     end
 
     def run
-      `docker run -it -v #{@datadir}:/data inutano/wpgsa wpgsa --logfc-file /data/#{@fname} --network-file /data/#{@network_fname}`
+      `docker run -it -v #{@datadir}:/data inutano/wpgsa wpgsa --logfc-file /data/#{@fname} --network-file /data/#{@network_file.split("/").last}`
     end
 
-    def clean
-      FileUtils.rm(File.join(@datadir, @network_fname))
+    def wpgsa_results
+      run
+      Dir.glob("#{@datadir}/*")
     end
   end
 end
