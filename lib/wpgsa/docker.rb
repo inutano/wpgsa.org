@@ -8,6 +8,7 @@ module WPGSA
       @input   = input_file[:tempfile].read
       @datadir = init_datadir
       @network_file = network_file_path
+      raise Errno::ENOENT if !File.exist?(@network_file)
       staging
     end
 
