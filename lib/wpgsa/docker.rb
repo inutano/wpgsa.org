@@ -16,6 +16,7 @@ module WPGSA
     def init_workdir(workdir)
       workdir = File.join(workdir, @uuid)
       FileUtils.mkdir_p(workdir)
+      FileUtils.chmod(0777, workdir)
       workdir
     end
 
