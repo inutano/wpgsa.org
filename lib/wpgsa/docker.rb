@@ -29,7 +29,7 @@ module WPGSA
       network_argument = "--network-file /data/#{@network_file.split("/").last}"
       cmd = [docker_cmd, input_argument, network_argument].join("\s")
       puts cmd
-      `cmd`
+      `#{cmd}`
     end
 
     def wpgsa_results
