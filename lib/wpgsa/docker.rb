@@ -26,9 +26,9 @@ module WPGSA
     end
 
     def staging_input_data(input_file) # return input file name
-      input_data = File.join(@workdir, input_file[:filename])
-      open(input_data, "w"){|f| f.puts(input_file[:tempfile].read) }
-      input_data
+      fname = input_file[:filename]
+      open(File.join(@workdir, fname), "w"){|f| f.puts(input_file[:tempfile].read) }
+      fname
     end
 
     def staging_network_file(network_file_path) # return network file name
