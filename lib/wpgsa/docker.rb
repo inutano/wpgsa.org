@@ -34,7 +34,7 @@ module WPGSA
     def staging_network_file(network_file_path) # return network file name
       raise Errno::ENOENT if !File.exist?(network_file_path)
       FileUtils.cp(network_file_path, @workdir)
-      network_file.split("/").last
+      network_file_path.split("/").last
     end
 
     def run
