@@ -33,7 +33,9 @@ class WpgsaApp < Sinatra::Base
 
   post "/wpgsa/result" do
     if params[:file]
-      d = WPGSA::Docker.new(params[:file], settings.config["network_file_path"])
+      workdir = settings.config["workdir"]
+      network_file_path = settings.config["network_file_path"]
+      d = WPGSA::Docker.new(params[:file], workdir, network_file_path)
       content_type "application/json"
       JSON.dump(d.wpgsa_results)
     end
