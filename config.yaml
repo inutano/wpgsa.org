@@ -1,2 +1,1 @@
-workdir: "/tmp"
-network_file: "/path/to/merged_mouse_150904_trim.network"
+network_file: "/path/to/merged_mouse_150904_trim.network" # rake wpgsa:init will rewrite this
