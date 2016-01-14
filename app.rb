@@ -8,6 +8,7 @@ require 'sinatra'
 require 'haml'
 require 'sass'
 require 'yaml'
+require 'json'
 
 require 'lib/wpgsa'
 
