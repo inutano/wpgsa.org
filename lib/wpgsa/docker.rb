@@ -24,7 +24,7 @@ module WPGSA
     end
 
     def run
-      docker_cmd       = "docker run -it -v #{@datadir}:/data inutano/wpgsa wpgsa"
+      docker_cmd       = "docker run -i -v #{@datadir}:/data inutano/wpgsa wpgsa"
       input_argument   = "--logfc-file /data/#{@fname}"
       network_argument = "--network-file /data/#{@network_file.split("/").last}"
       cmd = [docker_cmd, input_argument, network_argument].join("\s")
