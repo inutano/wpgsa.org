@@ -41,6 +41,19 @@ class WpgsaApp < Sinatra::Base
     end
   end
 
+  get "/wpgsa/result" do
+    uuid = params[:uuid]
+    type = params[:type]
+    result = WPGSA::Result.new(uuid, type)
+    case params[:format]
+    when "tsv"
+      result.read
+    else
+      content_type "application/json"
+      result.to_json
+    end
+  end
+
   not_found do
     haml :not_found
   end
