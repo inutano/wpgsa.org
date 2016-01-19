@@ -31,6 +31,10 @@ class WpgsaApp < Sinatra::Base
     haml :index
   end
 
+  get "/result" do
+    haml :result
+  end
+
   post "/wpgsa/result" do
     if params[:file]
       workdir = settings.config["workdir"]
