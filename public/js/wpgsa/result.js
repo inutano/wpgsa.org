@@ -37,7 +37,7 @@ var GetResult = {
   z_score: function(uuid){
     var defer = $.Deferred();
     $.ajax({
-      url: "/wpgsa/result?uuid=" + uuid + "&type=z_score",
+      url: "/wpgsa/result?uuid=" + uuid + "&type=z-score",
       type: 'GET',
       dataType: 'json',
       success: defer.resolve,
