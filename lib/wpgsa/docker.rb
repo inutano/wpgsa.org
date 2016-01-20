@@ -55,5 +55,9 @@ module WPGSA
       publish_result
       Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
     end
+
+    def dry_run
+      Dir.glob("#{File.join(__dir__, "../../public/data", "d5767493-4b86-4297-8b8f-d650f413d952")}/*").map{|path| path.sub(/^.+\/public\//,"") }
+    end
   end
 end
