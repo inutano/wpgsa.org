@@ -35,12 +35,15 @@ var UserData = {
 };
 
 function submitExpressionData(){
-  $('input#sendUserDataFile').on('click', function(){
-    var formData = new FormData($('input#userDataFile').get(0));
+  $('input#uploadUserDataFile').on('click', function(){
+    var formData = new FormData($('form#uploadUserDataFile').get(0));
     UserData.upload(formData).done(function(json){
-      var zScoreDataPath = json.filter(function(url){ url.includes("z_score") })[0];
-      var uuid = zScoreDataPath.split("/")[1];
-      window.open('/result?uuid='+uuid);
+      var zScoreDataPath = $.grep(json, function(url){ return url.includes("z_score"); });
+      var uuid = zScoreDataPath[0].split("/")[1];
+      var redirectUrl = '/result?uuid=' + uuid
+      window.open(redirectUrl, "_self", "");
+    }).fail(function(json){
+      console.log("Failed to upload data.");
     });
     return false;
   });
