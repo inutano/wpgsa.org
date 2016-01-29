@@ -32,6 +32,7 @@ class WpgsaApp < Sinatra::Base
   end
 
   get "/result" do
+    @uuid = params[:uuid] if params[:uuid]
     haml :result
   end
 

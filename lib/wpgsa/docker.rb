@@ -38,7 +38,7 @@ module WPGSA
       network_file_path.split("/").last
     end
 
-    def run
+    def run_wpgsa
       docker_cmd       = "docker run -i -v #{@workdir}:/data inutano/wpgsa wpgsa"
       input_argument   = "--logfc-file /data/#{@input_data}"
       network_argument = "--network-file /data/#{@network_file}"
@@ -46,12 +46,20 @@ module WPGSA
       `#{cmd}`
     end
 
+    def run_hclust
+      z_score = Dir.glob(@work_dir+"/*z_score*").first
+      docker_cmd = "docker run -i -v #{@work_dir}:/data inutano/wpgsa hclust"
+      arguments  = "#{z_score} > /data/data.hclust.js"
+      `#{docker_cmd} #{arguments}`
+    end
+
     def publish_result
       FileUtils.cp_r(Dir.glob("#{@workdir}/*"), @datadir)
     end
 
     def wpgsa_results
-      run
+      run_wpgsa
+      run_hclust
       publish_result
       Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
     end

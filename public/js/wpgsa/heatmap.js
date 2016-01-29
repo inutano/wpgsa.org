@@ -1,3 +1,5 @@
+// heatmap.js v0.1.0
+// script for wpgsa.org
 // Thanks to Damian for amaging tutorial! http://blog.nextgenetics.net/?e=44
 
 // height of each column in the heatmap
