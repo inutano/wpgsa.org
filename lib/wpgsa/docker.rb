@@ -51,9 +51,9 @@ module WPGSA
     end
 
     def run_hclust
-      z_score = Dir.glob(@workdir+"/*z_score*").first
+      z_score = Dir.glob(@workdir+"/*z_score*").first.split("/").last
       docker_cmd = "docker run -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
-      arguments  = "#{z_score} > #{@workdir}/data.hclust.js"
+      arguments  = "/data/#{z_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
     end
 
