@@ -13,6 +13,10 @@ module WPGSA
       @network_file = staging_network_file(network_file_path)
     end
 
+    def wpgsa_container_id
+      "inutano/wpgsa:0.3.1"
+    end
+
     def init_workdir(workdir)
       workdir = File.join(workdir, @uuid)
       FileUtils.mkdir_p(workdir)
@@ -39,7 +43,7 @@ module WPGSA
     end
 
     def run_wpgsa
-      docker_cmd       = "docker run -i -v #{@workdir}:/data inutano/wpgsa wpgsa"
+      docker_cmd       = "docker run -i -v #{@workdir}:/data #{wpgsa_container_id} wpgsa"
       input_argument   = "--logfc-file /data/#{@input_data}"
       network_argument = "--network-file /data/#{@network_file}"
       cmd = [docker_cmd, input_argument, network_argument].join("\s")
@@ -48,7 +52,7 @@ module WPGSA
 
     def run_hclust
       z_score = Dir.glob(@workdir+"/*z_score*").first
-      docker_cmd = "docker run -i -v #{@workdir}:/data inutano/wpgsa hclust"
+      docker_cmd = "docker run -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
       arguments  = "#{z_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
     end
