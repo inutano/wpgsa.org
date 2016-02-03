@@ -4,8 +4,8 @@
 
 // onload
 $(function(){
-  // retrieve result and draw heatmap
-  drawHeatmap();
+  // set filename to page header
+  setResultPageHeader();
 });
 
 // functions
@@ -25,35 +25,26 @@ var getUrlParameter = function getUrlParameter(sParam) {
   }
 };
 
-// draw heatmap
-
-function drawHeatmap(){
-  retrieveResult();
-  hclust();
-  heatmap();
-}
+// result page rendering
 
 var GetResult = {
-  z_score: function(uuid){
-    var defer = $.Deferred();
-    $.ajax({
-      url: "/wpgsa/result?uuid=" + uuid + "&type=z-score",
-      type: 'GET',
-      dataType: 'json',
-      success: defer.resolve,
-      error: defer.reject
-    });
-    return defer.promise();
+  input_file: {
+    filename: function(uuid){
+      var defer = $.Deferred();
+      $.ajax({
+        url: "/wpgsa/result?uuid=" + uuid + "&type=filepath",
+        type: 'GET',
+        success: defer.resolve,
+        error: defer.reject
+      });
+      return defer.promise();
+    }
   }
 };
 
-function retrieveResult(){
+function setResultPageHeader(){
   var uuid = getUrlParameter('uuid');
-  GetResult.z_score(uuid).done(function(json){
-    string = JSON.stringify(json);
-    $('#heatmap').append(string);
+  GetResult.input_file.filename(uuid).done(function(text){
+    $('h1').append("wPGSA Result: "+text);
   });
 }
-
-function hclust(){}
-function heatmap(){}
