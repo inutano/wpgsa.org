@@ -33,7 +33,7 @@ var UserData = {
 function uploadExpressionData(){
   $('input#uploadUserDataFile').on('click', function(){
     // start upload sequence
-    startLoading("Now uploading data...");
+    startLoading("Now uploading data to start analysis, this may take a while...");
     var button = $(this);
     button.prop("disable", true);
 
