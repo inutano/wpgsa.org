@@ -14,8 +14,8 @@ var mySVG = d3.select("#heatmap")
   .attr("width", (w * cols.length) + 400)
   .attr("height", (h * rows.length) + 100)
   .style('position', 'absolute')
-  .style('top', 150)
-  .style('left', 150);
+  .style('top', 0)
+  .style('left', 0);
 
 // define a color sacle using the min and max expression values
 var colorScale = d3.scale.linear()
