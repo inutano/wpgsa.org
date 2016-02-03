@@ -59,8 +59,9 @@ function uploadExpressionData(){
 }
 
 function startLoading(msg){
-  var msg = "Data uploaded: started analysis, this may take a while..";
-  var dispMsg = "<div class='loadingMsg'>" + msg + "</div>";
+  var msg = "Data uploaded, started analysis. This may take a while.."
+  var span = "<span class='msg'>" + msg + "</span>";
+  var dispMsg = "<div class='loadingMsg'>" + span + "</div>";
   if ($(".loading").size() == 0) {
     $.each($(".load-image"), function(){
       $(this).append("<div class='loading'>" + dispMsg + "</div>");
