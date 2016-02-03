@@ -48,9 +48,13 @@ module WPGSA
       glob(".network")
     end
 
+    def hclust
+      glob("hclust.js")
+    end
+
     def input_data
       fpath = Dir.glob(@data_dir+"/*").select do |f|
-        f != p_value && f != q_value && f != z_score && f != network_data
+        f != p_value && f != q_value && f != z_score && f != network_data && f != hclust
       end
       fpath[0]
     end
