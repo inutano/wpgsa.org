@@ -62,10 +62,12 @@ var columnLabel = mySVG.selectAll(".colLabel")
 // expression value label
 var expLab = d3.select("#heatmap")
   .append('div')
-  .style('height', 23)
+  .attr("class","expLab")
+  .style('height', 56)
+  .style('width', 1000)
   .style('position', 'absolute')
-  .style('background', 'FFE53B')
-  .style('opacity', 0.8)
+  .style('background', 'azure')
+  .style('opacity', 0.7)
   .style('top', 0)
   .style('padding', 10)
   .style('left', 40)
@@ -80,7 +82,8 @@ heatmapRow
 
     output = '<b>' + rows[i] + '</b><br>';
     for (var j = 0, count = data[i].length; j < count; j++) {
-      output += data[i][j][0] + ",";
+      var numbers = parseFloat(data[i][j][0]).toFixed(6)
+      output += numbers + ", ";
     }
     expLab
       .style('top', (i * h))
