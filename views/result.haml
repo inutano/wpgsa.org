@@ -35,26 +35,29 @@
 
 
     .container
-      %h2
-        wPGSA Result
       %row
-        .col-md-2.col-md-offset-10
-          .btn-toolbar{ role: "toolbar" }
-            .btn-group{ role: "group" }
-              .dropdown
-                .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
-                  Download
-                  %span.caret
-                %ul.dropdown-menu{ "aria-labelledby" => "download-dropdown" }
-                  %li
-                    %a#pValue
-                      p-value
-                  %li
-                    %a#qValue
-                      q-value
-                  %li
-                    %a#zScore
-                      z-score
+        .col-md-9
+          %h2
+            wPGSA Result
+        .col-md-3
+          .btn-group.downloadButton{ role: "group" }
+            .dropdown
+              .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
+                Download TSV
+                %span.caret
+              %ul.dropdown-menu{ "aria-labelledby" => "download-dropdown" }
+                %li
+                  %a#pValue
+                    p-value
+                %li
+                  %a#qValue
+                    q-value
+                %li
+                  %a#zScore
+                    z-score
+      %row
+        .col-md-12
+          %hr
 
       %row
         .col-md-12
