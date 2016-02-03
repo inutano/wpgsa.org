@@ -56,9 +56,11 @@
                       .form-group
                         %input.filestyle{ type: "file", name: "file", id: "userDataFile", "data-buttonText" => "Select", "data-buttonBefore" => "true", "data-placeholder" => "No file selected"  }
                         %input.btn.btn-default{ type: "submit", name: "submit", id: "uploadUserDataFile" }
-                        .load-image
                 %row
-                  .col-md-4.col-md-offset-1
+                  .col-md-10
+                    .load-image
+                %row
+                  .col-md-10
                     .linkExample
                       %a.dataExample{ href: "#", id: "exampleData" }
                         Try with example
