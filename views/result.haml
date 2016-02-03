@@ -37,7 +37,27 @@
     .container
       %h1
         Result
-      #heatmap
+      %row
+        .col-md-5.col-md-offset-7
+          .btn-toolbar{ role: "toolbar" }
+            .btn-group{ role: "group" }
+              .dropdown
+                .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
+                  Download
+                  %span.caret
+                %ul.dropdown-menu{ "aria-labelledby" => "download-dropdown" }
+                  %li
+                    %a#pValue
+                      p-value
+                  %li
+                    %a#qValue
+                      q-value
+                  %li
+                    %a#zScore
+                      z-score
+
+      .container
+        #heatmap
 
     %footer.footer
       .container
