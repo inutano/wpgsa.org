@@ -60,7 +60,7 @@ var columnLabel = mySVG.selectAll(".colLabel")
   });
 
 // expression value label
-var expLab = d3.select("body")
+var expLab = d3.select("#heatmap")
   .append('div')
   .style('height', 23)
   .style('position', 'absolute')
