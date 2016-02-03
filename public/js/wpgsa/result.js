@@ -6,6 +6,8 @@
 $(function(){
   // set filename to page header
   setResultPageHeader();
+  // set buttons to download result files
+  setDownloadButtons();
 });
 
 // functions
@@ -27,24 +29,35 @@ var getUrlParameter = function getUrlParameter(sParam) {
 
 // result page rendering
 
-var GetResult = {
-  input_file: {
-    filename: function(uuid){
-      var defer = $.Deferred();
-      $.ajax({
-        url: "/wpgsa/result?uuid=" + uuid + "&type=filepath",
-        type: 'GET',
-        success: defer.resolve,
-        error: defer.reject
-      });
-      return defer.promise();
-    }
-  }
-};
+getFilepath = function(uuid, type){
+  var defer = $.Deferred();
+  $.ajax({
+    url: "/wpgsa/result?uuid=" + uuid + "&type=" + type + "&format=filepath",
+    type: 'GET',
+    success: defer.resolve,
+    error: defer.reject
+  });
+  return defer.promise();
+}
 
 function setResultPageHeader(){
   var uuid = getUrlParameter('uuid');
-  GetResult.input_file.filename(uuid).done(function(text){
-    $('h1').append("wPGSA Result: "+text);
+  getfilepath(uuid, "input").done(function(fpath){
+    var filename = fpath.replace(/^.+\//,"");
+    $('h1').append("wPGSA Result: " + filename);
   });
+}
+
+function setDownloadLink(element, type){
+  var uuid = getUrlParameter('uuid');
+  getFilepath(uuid, type).done(function(fpath){
+    var filename = fpath.replace(/^.+\//,"");
+    element.attr("href", fpath).attr("download", filename);
+  });
+}
+
+function setDownloadButtons(){
+  setDownloadLink($('a#pValue'), "p-value");
+  setDownloadLink($('a#qValue'), "q-value");
+  setDownloadLink($('a#zScore'), "z-score");
 }
