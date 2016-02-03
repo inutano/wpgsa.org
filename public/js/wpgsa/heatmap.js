@@ -3,7 +3,7 @@
 // Thanks to Damian for amaging tutorial! http://blog.nextgenetics.net/?e=44
 
 // height of each column in the heatmap
-var h = 5;
+var h = 12;
 
 // width of each column in the heatmap
 var w = 70;
@@ -75,7 +75,7 @@ var expLab = d3.select("body")
 heatmapRow
   .on('mouseover', function(d,i){
     d3.select(this)
-      .attr('stroke-width', 1)
+      .attr('stroke-width', 0.5)
       .attr('stroke', 'black')
 
     output = '<b>' + rows[i] + '</b><br>';
