@@ -42,7 +42,7 @@ getFilepath = function(uuid, type){
 
 function setResultPageHeader(){
   var uuid = getUrlParameter('uuid');
-  getfilepath(uuid, "input").done(function(fpath){
+  getFilepath(uuid, "input").done(function(fpath){
     var filename = fpath.replace(/^.+\//,"");
     $('h1').append("wPGSA Result: " + filename);
   });
