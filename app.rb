@@ -57,6 +57,8 @@ class WpgsaApp < Sinatra::Base
     case params[:format]
     when "tsv"
       result.read
+    when "filepath"
+      result.result_file_path.sub(/^.+public/,"")
     else
       content_type "application/json"
       result.to_json
