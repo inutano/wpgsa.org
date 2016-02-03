@@ -43,14 +43,17 @@ function uploadExpressionData(){
       var zScoreDataPath = $.grep(json, function(url){ return url.includes("z_score"); });
       var uuid = zScoreDataPath[0].split("/")[1];
       var redirectUrl = '/result?uuid=' + uuid
+      // finish upload sequence
+      removeLoading();
+      button.prop("disable", false);
+      // open result page
       window.open(redirectUrl, "_self", "");
     }).fail(function(json){
-      console.log("Failed to upload data.");
+      // finish upload sequence
+      removeLoading();
+      button.prop("disable", false);
+      alert("Error!");
     });
-
-    // finish upload sequence
-    removeLoading();
-    button.prop("disable", false);
     return false;
   });
 }
