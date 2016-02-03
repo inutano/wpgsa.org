@@ -33,7 +33,7 @@ var UserData = {
 function uploadExpressionData(){
   $('input#uploadUserDataFile').on('click', function(){
     // start upload sequence
-    startLoading("Now uploading data to start analysis, this may take a while...");
+    startLoading();
     var button = $(this);
     button.prop("disable", true);
 
@@ -59,9 +59,7 @@ function uploadExpressionData(){
 }
 
 function startLoading(msg){
-  if (typeof msg === "undefined") {
-    var msg = "";
-  }
+  var msg = "Data uploaded: started analysis, this may take a while..";
   var dispMsg = "<div class='loadingMsg'>" + msg + "</div>";
   if ($(".loading").size() == 0) {
     $.each($(".load-image"), function(){
