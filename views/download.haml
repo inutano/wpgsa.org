@@ -1,0 +1,69 @@
+!!! 5
+%html{ lang: "en" }
+  %head
+    %meta{ charset: "utf-8" }
+    %meta{ "http-equiv" => "X-UA-Compatible", content: "IE=edge" }
+    %meta{ name: "viewport", content: "width=device-width, initial-scale=1" }
+
+    %meta{ name: "description", content: "wPGSA is a method to estimate relative activities of transcriptional regulators from given transcriptome data." }
+    %meta{ name: "author", content: "Eiryo Kawakami, Tazro Ohta" }
+
+    %title= "wPGSA online"
+
+    // Bootstrap core and typeahead CSS
+    %link{ href: "#{app_root}/css/bootstrap.min.css", rel: "stylesheet" }
+    /
+      %link{ href: "#{app_root}/css/typeaheadjs.css", rel: "stylesheet" }
+
+    // Custom style for this website
+    %link{ href: "#{app_root}/style.css", rel: "stylesheet"}
+
+  %body
+    %nav.navbar.navbar-inverse.navbar-fixed-top
+      .container
+        .navbar-header
+          %button.navbar-toggle.collapsed{ type: "button", "data-toggle" => "collapse", "data-target" => "#navbar", "aria-expanded" => "false", "aria-controls" => "navbar" }
+            %span.sr-only Toggle navigation
+            %span.icon-bar
+            %span.icon-bar
+            %span.icon-bar
+          %a.navbar-brand{ href: "#{app_root}" }= "wPGSA"
+        #navbar.collapse.navbar-collapse
+          %ul.nav.navbar-nav
+            %li
+              %a{ href: "https://github.com/eiryo-kawakami/wPGSA" }= "Documentation"
+
+
+    .jumbotron
+      .container
+        %h1
+          wPGSA
+        %p.main-desc
+          Estimate relative activities of transcriptional regulators from transcriptome data
+
+    %section
+      ~ markdown(:download, layout: false, fenced_code_blocks: true)
+
+    %footer.footer
+      .container
+        %row
+          .col-md-4.col-md-offset-4
+            /
+              %a{ href: "http://dbcls.rois.ac.jp", target: "_blank" }
+                %img{ src: "/images/logo/dbcls_logo.png", width: 100 }
+
+    /
+      Bootstrap Core Javascript
+      =========================
+    %script{ src: "#{app_root}/js/jquery.min.js" }
+    %script{ src: "#{app_root}/js/bootstrap.min.js" }
+    %script{ src: "#{app_root}/js/ie10-viewport-bug-workaround.js" }
+    %script{ src: "#{app_root}/js/liquidmetal.js" }
+    %script{ src: "#{app_root}/js/bootstrap-filestyle.min.js" }
+    %script{ src: "#{app_root}/js/wpgsa/wpgsa.js" }
+    %script{ src: "#{app_root}/js/wpgsa/upload.js" }
+
+    /
+      %script{ src: "#{app_root}/js/typeahead.bundle.js" }
+      %script{ src: "#{app_root}/js/jquery.flexselect.js" }
+      %link{ href: "#{app_root}/css/flexselect.css", rel: "stylesheet", type: "text/css", media: "screen" }

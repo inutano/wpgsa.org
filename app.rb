@@ -31,6 +31,10 @@ class WpgsaApp < Sinatra::Base
     haml :index
   end
 
+  get "/download" do
+    haml :download
+  end
+
   get "/result" do
     @uuid = params[:uuid] if params[:uuid]
     haml :result
