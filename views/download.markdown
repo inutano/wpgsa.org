@@ -1,7 +1,5 @@
 ### Download TF binding peak data
 
-[Download TF binding peak data](http://web.ims.riken.jp/en/paper_data/wPGSA_ChIPpeak_detailed_info.tar.bz2)
-
 The detailed data of TF binding peak including location of the location of the peaks and the distance to the nearest transcription start site (TSS) annotated using the Bioconductor package ChIPpeakAnno and TSS annotation data “TSS.mouse.NCBIM37”.
 
 - TF: The Uniprot symbol of transcription factor
@@ -24,6 +22,10 @@ The detailed data of TF binding peak including location of the location of the p
 	- includeFeature: peak include the gene (impractical)
 - distancetoFeature: distance between the start of the peak and the TSS of the nearest gene
 
+[Download TF binding peak data](http://web.ims.riken.jp/en/paper_data/wPGSA_ChIPpeak_detailed_info.tar.bz2)
+
 ### Download ChIP-Seq data list
+
+ChIP-Seq data list provides metadata for each ChIP-Seq experiment.
 
 [Donwload data list (.xlsx)](/data/wPGSA_data_info.xlsx)
