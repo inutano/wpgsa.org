@@ -24,8 +24,8 @@ The detailed data of TF binding peak including location of the location of the p
 
 [Download TF binding peak data](http://web.ims.riken.jp/en/paper_data/wPGSA_ChIPpeak_detailed_info.tar.bz2)
 
-### Download ChIP-Seq data list
+### Download ChIP data list
 
-ChIP-Seq data list provides metadata for each ChIP-Seq experiment.
+ChIP data list provides metadata for each ChIP experiment.
 
 [Donwload data list (.xlsx)](/data/wPGSA_data_info.xlsx)
