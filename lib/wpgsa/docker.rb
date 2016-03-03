@@ -43,7 +43,7 @@ module WPGSA
     end
 
     def run_wpgsa
-      docker_cmd       = "docker run -i -v #{@workdir}:/data #{wpgsa_container_id} wpgsa"
+      docker_cmd       = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} wpgsa"
       input_argument   = "--logfc-file /data/#{@input_data}"
       network_argument = "--network-file /data/#{@network_file}"
       cmd = [docker_cmd, input_argument, network_argument].join("\s")
@@ -52,7 +52,7 @@ module WPGSA
 
     def run_hclust
       z_score = Dir.glob(@workdir+"/*z_score*").first.split("/").last
-      docker_cmd = "docker run -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
+      docker_cmd = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
       arguments  = "/data/#{z_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
     end
