@@ -66,6 +66,8 @@
                     .linkExample
                       %a.dataExample{ href: "/result?uuid=example", id: "exampleData" }
                         See result page of example data
+      .row.dataDescription
+        ~ markdown(:index, layout: false, fenced_code_blocks: true)
 
     %footer.footer
       .container
