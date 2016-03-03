@@ -67,7 +67,28 @@
                       %a.dataExample{ href: "/result?uuid=example", id: "exampleData" }
                         See result page of example data
       .row.dataDescription
-        ~ markdown(:index, layout: false, fenced_code_blocks: true)
+        %h3
+          About input data format
+        %p
+          Log fold change data should be prepared in an ASCII tab delimited text file. It is organized as follows.
+        %p
+          To create and edit the log fold change file, use a text editor or Excel. When you use Excel, be aware of a problem as described in [Zeeberg et al 2004](http://www.ncbi.nlm.nih.gov/pubmed/15214961).
+        %p
+          %img{ src: "/images/dataformat.png", alt: "dataformat"}
+        %p
+          The first line contains the identifiers for each sample in the dataset.
+        %dl.dl-horizontal
+          %dt Line format:
+          %dd Gene Symbol(tab)(sample1 name)(tab)(sample2 name)(tab) … (sampleN name)
+          %dt Example:
+          %dd Gene Symbol(tab)K_Virus_0(tab)K_Virus_3(tab) … K_Virus_D7
+        %p
+          The remainder of the lines contains log fold change (LFC) data for each of the genes.
+        %dl.dl-horizontal
+          %dt Line format:
+          %dd (gene name)(tab)(LFC of sample1)(tab)(LFC of sample2)(tab) … (LFC of sampleN)
+          %dt Example:
+          %dd Plekhg2(tab)-0.092(tab)0.170(tab) … 0.047
 
     %footer.footer
       .container
