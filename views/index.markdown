@@ -3,7 +3,7 @@
 Log fold change data should be prepared in an ASCII tab delimited text file. It is organized as follows.  
 To create and edit the log fold change file, use a text editor or Excel. When you use Excel, be aware of a problem as described in [Zeeberg et al 2004](http://www.ncbi.nlm.nih.gov/pubmed/15214961).
 
-![dataformat](/images/dataformat.pdf)
+![dataformat](/images/dataformat.png)
 
 The first line contains the identifiers for each sample in the dataset  
 Line format: Gene Symbol(tab)(sample1 name)(tab)(sample2 name)(tab) … (sampleN name)  
