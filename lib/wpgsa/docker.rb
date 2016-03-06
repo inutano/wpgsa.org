@@ -14,7 +14,7 @@ module WPGSA
     end
 
     def wpgsa_container_id
-      "inutano/wpgsa:0.4.0"
+      "inutano/wpgsa:0.4.1"
     end
 
     def init_workdir(workdir)
