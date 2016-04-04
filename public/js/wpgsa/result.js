@@ -29,10 +29,10 @@ var getUrlParameter = function getUrlParameter(sParam) {
 
 // result page rendering
 
-getFilepath = function(uuid, type){
+getResultData = function(uuid, type, format){
   var defer = $.Deferred();
   $.ajax({
-    url: "/wpgsa/result?uuid=" + uuid + "&type=" + type + "&format=filepath",
+    url: "/wpgsa/result?uuid=" + uuid + "&type=" + type + "&format=" + format,
     type: 'GET',
     success: defer.resolve,
     error: defer.reject
@@ -42,7 +42,7 @@ getFilepath = function(uuid, type){
 
 function setResultPageHeader(){
   var uuid = getUrlParameter('uuid');
-  getFilepath(uuid, "input").done(function(fpath){
+  getResultData(uuid, "input", "filepath").done(function(fpath){
     var filename = $('<div class="small">' + fpath.replace(/^.+\//,"") + '</div>');
     $('h2').append(filename);
   });
@@ -50,7 +50,7 @@ function setResultPageHeader(){
 
 function setDownloadLink(element, type){
   var uuid = getUrlParameter('uuid');
-  getFilepath(uuid, type).done(function(fpath){
+  getResultData(uuid, type, "filepath").done(function(fpath){
     var filename = fpath.replace(/^.+\//,"");
     element.attr("href", fpath).attr("download", filename);
   });
