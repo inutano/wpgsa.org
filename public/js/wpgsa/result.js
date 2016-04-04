@@ -8,6 +8,8 @@ $(function(){
   setResultPageHeader();
   // set buttons to download result files
   setDownloadButtons();
+  // show result table
+  showResultTable();
 });
 
 // functions
@@ -60,4 +62,39 @@ function setDownloadButtons(){
   setDownloadLink($('a#pValue'), "p-value");
   setDownloadLink($('a#qValue'), "q-value");
   setDownloadLink($('a#zScore'), "z-score");
+}
+
+function showResultTable(){
+  var resultTable = $('table#resultTable');
+  var uuid = getUrlParameter('uuid');
+  getResultData(uuid, "z-score", "tsv").done(function(data){
+    var tsv = $.tsv.toArrays(data);
+    var header = tsv.splice(0,1)[0];
+    var fixed = header.splice(0,3); // remove fixed cols, tf, #experiments, mean z-score
+    var samples = header; // remaining cols are array of samples
+
+    var tableHeaderRow = $('<tr>');
+    var tableHeaderCols = $.merge(['TF', '#experiments', 'mean Z-score'], samples);
+    $.each(tableHeaderCols, function(i, e){
+      tableHeaderRow.append('<th>' + e + '</th>');
+    });
+    tableHeaderRow.append('</tr>');
+
+    var tableHeader = $('<thead>');
+    tableHeader.append(tableHeaderRow);
+    tableHeader.append('</thead>');
+    resultTable.append(tableHeader);
+
+    resultTable.append('<tbody>');
+    $.each(tsv, function(i, line){
+      var row = $('<tr>')
+      $.each(line, function(i, e){
+        //row.append('<td>' + Math.round(parseFloat(e)*10000)/10000 + '</td>');
+        row.append('<td>' + e + '</td>');
+      });
+      row.append('</tr>');
+      resultTable.append(row);
+    });
+    resultTable.append('</tbody>');
+  });
 }

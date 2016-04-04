@@ -63,7 +63,9 @@
 
       %row
         .col-md-12
-          #heatmap
+          .outerBox
+            .innerBox
+              %table#resultTable.table.table-striped
 
     %footer.footer
       .container
@@ -77,6 +79,7 @@
       Bootstrap Core Javascript
       =========================
     %script{ src: "#{app_root}/js/jquery.min.js" }
+    %script{ src: "#{app_root}/js/jquery.tsv-0.96.min.js" }
     %script{ src: "#{app_root}/js/bootstrap.min.js" }
     %script{ src: "#{app_root}/js/ie10-viewport-bug-workaround.js" }
     %script{ src: "#{app_root}/js/liquidmetal.js" }
