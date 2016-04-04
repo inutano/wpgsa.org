@@ -10,6 +10,8 @@ $(function(){
   setDownloadButtons();
   // show result table
   showResultTable();
+  // set linkout to heatmap
+  setHeatmapLink();
 });
 
 // functions
@@ -96,5 +98,12 @@ function showResultTable(){
       resultTable.append(row);
     });
     resultTable.append('</tbody>');
+  });
+}
+
+function setHeatmapLink(){
+  var uuid = getUrlParameter('uuid');
+  $('button#viewHeatmap').on('click', function(){
+    window.open('/result/heatmap?uuid=' + uuid, "_self", "");
   });
 }
