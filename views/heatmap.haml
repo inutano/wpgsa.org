@@ -1,0 +1,95 @@
+
+%html{ lang: "en" }
+  %head
+    %meta{ charset: "utf-8" }
+    %meta{ "http-equiv" => "X-UA-Compatible", content: "IE=edge" }
+    %meta{ name: "viewport", content: "width=device-width, initial-scale=1" }
+
+    %meta{ name: "description", content: "wPGSA is a method to estimate relative activities of transcriptional regulators from given transcriptome data." }
+    %meta{ name: "author", content: "Eiryo Kawakami, Tazro Ohta" }
+
+    %title= "wPGSA online"
+
+    // Bootstrap core and typeahead CSS
+    %link{ href: "#{app_root}/css/bootstrap.min.css", rel: "stylesheet" }
+    /
+      %link{ href: "#{app_root}/css/typeaheadjs.css", rel: "stylesheet" }
+
+    // Custom style for this website
+    %link{ href: "#{app_root}/style.css", rel: "stylesheet"}
+
+  %body
+    %nav.navbar.navbar-inverse.navbar-fixed-top
+      .container
+        .navbar-header
+          %button.navbar-toggle.collapsed{ type: "button", "data-toggle" => "collapse", "data-target" => "#navbar", "aria-expanded" => "false", "aria-controls" => "navbar" }
+            %span.sr-only Toggle navigation
+            %span.icon-bar
+            %span.icon-bar
+            %span.icon-bar
+          %a.navbar-brand{ href: "#{app_root}" }= "wPGSA"
+        #navbar.collapse.navbar-collapse
+          %ul.nav.navbar-nav
+            %li
+              %a{ href: "/download" }= "Download peak data"
+            %li
+              %a{ href: "https://github.com/eiryo-kawakami/wPGSA" }= "Documentation"
+
+
+    .container
+      %row
+        .col-md-9
+          %h2
+            wPGSA Result
+        .col-md-3
+          .btn-group.downloadButton{ role: "group" }
+            .dropdown
+              .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
+                Download TSV
+                %span.caret
+              %ul.dropdown-menu{ "aria-labelledby" => "download-dropdown" }
+                %li
+                  %a#pValue
+                    p-value
+                %li
+                  %a#qValue
+                    q-value
+                %li
+                  %a#zScore
+                    z-score
+      %row
+        .col-md-12
+          %hr
+
+      %row
+        .col-md-12
+          #heatmap
+
+    %footer.footer
+      .container
+        %row
+          .col-md-10.col-md-offset-1
+            /
+              %a{ href: "http://dbcls.rois.ac.jp", target: "_blank" }
+                %img{ src: "/images/logo/dbcls_logo.png", width: 100 }
+
+    /
+      Bootstrap Core Javascript
+      =========================
+    %script{ src: "#{app_root}/js/jquery.min.js" }
+    %script{ src: "#{app_root}/js/bootstrap.min.js" }
+    %script{ src: "#{app_root}/js/ie10-viewport-bug-workaround.js" }
+    %script{ src: "#{app_root}/js/liquidmetal.js" }
+    %script{ src: "#{app_root}/js/wpgsa/wpgsa.js" }
+    %script{ src: "#{app_root}/js/wpgsa/result.js" }
+
+    / load hclust data
+    %script{ src: "#{app_root}/data/#{@uuid}/data.hclust.js" }
+
+    %script{ src: "#{app_root}/js/d3.min.js" }
+    %script{ src: "#{app_root}/js/wpgsa/heatmap.js" }
+
+    /
+      %script{ src: "#{app_root}/js/typeahead.bundle.js" }
+      %script{ src: "#{app_root}/js/jquery.flexselect.js" }
+      %link{ href: "#{app_root}/css/flexselect.css", rel: "stylesheet", type: "text/css", media: "screen" }

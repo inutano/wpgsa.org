@@ -40,6 +40,11 @@ class WpgsaApp < Sinatra::Base
     haml :result
   end
 
+  get "/result/heatmap" do
+    @uuid = params[:uuid] if params[:uuid]
+    haml :heatmap
+  end
+
   post "/wpgsa/result" do
     if params[:file]
       workdir = settings.config["workdir"]
