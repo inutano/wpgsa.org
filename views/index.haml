@@ -36,82 +36,90 @@
               %a{ href: "https://github.com/eiryo-kawakami/wPGSA" }= "Documentation"
 
 
-    .jumbotron
-      .container
+    .container
+      .jumbotron
         %h1
           wPGSA
         %p.main-desc
-          Estimate relative activities of transcriptional regulators from transcriptome data
+          Estimate relative activities of transcriptional regulators from transcriptome data by weighted Parametric Gene Set Analysis: wPGSA.
 
     .container
       .row
-        .col-md-6
+        .col-md-12
           .panel.panel-default
             .panel-heading{ id: "userDataInputPanel" }
-              %h4.panel-title= "Upload your transcriptome data"
-            .panel-body
-              /%form{ action: "/wpgsa/result", method: "post", enctype: "multipart/form-data" }
-              .panel-input.userData
+              %h2.panel-title= "Upload your transcriptome data to run wPGSA"
+            .panel-body.userData
+              .panel-input
                 %row
-                  .col-md-10
+                  .col-md-9
+                    %p
+                      It takes a few minutes or longer depend on your data size.
                     %form.form-inline#uploadUserDataFile
                       .form-group
                         %input.filestyle{ type: "file", name: "file", id: "userDataFile", "data-buttonText" => "Select", "data-buttonBefore" => "true", "data-placeholder" => "No file selected"  }
                         %input.btn.btn-default{ type: "submit", name: "submit", id: "uploadUserDataFile" }
-                %row
-                  .col-md-10
-                    .load-image
-                %row
-                  .col-md-10
+                  .col-md-3
                     .linkExample
                       %a.dataExample{ href: "/result?uuid=example", id: "exampleData" }
                         See result page of example data
-      .row.dataDescription.description
-        %h3
-          About input data format
-        %p
-          Log fold change data should be prepared in an ASCII tab delimited text file. It is organized as follows.
-        %p
-          To create and edit the log fold change file, use a text editor or Excel. When you use Excel, be aware of a problem as described in
-          %a{ href: "http://www.ncbi.nlm.nih.gov/pubmed/15214961" }
-            Zeeberg et al 2004
-          \.
-        %p
-          %img{ src: "/images/dataformat.png", alt: "dataformat"}
-        %p
-          The first line contains the identifiers for each sample in the dataset.
-        %dl.dl-horizontal
-          %dt Line format:
-          %dd Gene Symbol(tab)(sample1 name)(tab)(sample2 name)(tab) … (sampleN name)
-          %dt Example:
-          %dd Gene Symbol(tab)K_Virus_0(tab)K_Virus_3(tab) … K_Virus_D7
-        %p
-          The remainder of the lines contains log fold change (LFC) data for each of the genes.
-        %dl.dl-horizontal
-          %dt Line format:
-          %dd (gene name)(tab)(LFC of sample1)(tab)(LFC of sample2)(tab) … (LFC of sampleN)
-          %dt Example:
-          %dd Plekhg2(tab)-0.092(tab)0.170(tab) … 0.047
+                %row
+                  .col-md-9
+                    .load-image
 
-      .row.changeLog.description
-        %h3 Change Log
-        %dl.dl-horizontal
-          %dt 5 April 2016
-          %dd Table view, bug report instruction
-          %dt 3 March 2016
-          %dd Added input data format description
-          %dt 29 February 2016
-          %dd Publish data download page
-          %dt 4 February 2016
-          %dd Launch website, upload data to run wPGSA, heatmap view
+          .panel.panel-default
+            .panel-heading{ id: "aboutInputDataFormat" }
+              %h2.panel-title= "About input data format"
+            .panel-body.panel-body-desc
+              .panel-input
+                %p
+                  Log fold change data should be prepared in an ASCII tab delimited text file. It is organized as follows.
+                %p
+                  To create and edit the log fold change file, use a text editor or Excel. When you use Excel, be aware of a problem as described in
+                  %a{ href: "http://www.ncbi.nlm.nih.gov/pubmed/15214961" }
+                    Zeeberg et al 2004
+                  \.
+                %p
+                  %img{ src: "/images/dataformat.png", alt: "dataformat"}
+                %p
+                  The first line contains the identifiers for each sample in the dataset.
+                %dl.dl-horizontal
+                  %dt Line format:
+                  %dd Gene Symbol(tab)(sample1 name)(tab)(sample2 name)(tab) … (sampleN name)
+                  %dt Example:
+                  %dd Gene Symbol(tab)K_Virus_0(tab)K_Virus_3(tab) … K_Virus_D7
+                %p
+                  The remainder of the lines contains log fold change (LFC) data for each of the genes.
+                %dl.dl-horizontal
+                  %dt Line format:
+                  %dd (gene name)(tab)(LFC of sample1)(tab)(LFC of sample2)(tab) … (LFC of sampleN)
+                  %dt Example:
+                  %dd Plekhg2(tab)-0.092(tab)0.170(tab) … 0.047
 
-        %h3 Future work
-        %ul
-          %li Faster execution of wPGSA
-          %li Heatmap view threshold feature (currently whole result data only)
-          %li Documentation of algorithm
+          .panel.panel-default
+            .panel-heading#changeLog
+              %h2.panel-title= "Change Log"
+            .panel-body.panel-body-desc
+              .panel-input
+                %dl.dl-horizontal
+                  %dt 5 April 2016
+                  %dd Table view, bug report instruction
+                  %dt 3 March 2016
+                  %dd Added input data format description
+                  %dt 29 February 2016
+                  %dd Publish data download page
+                  %dt 4 February 2016
+                  %dd Launch website, upload data to run wPGSA, heatmap view
 
-
+          .panel.panel-default
+            .panel-heading#futureWork
+              %h2.panel-title= "Future Work"
+            .panel-body.panel-body-desc
+              .panel-input
+                %ul
+                  %li Faster execution of wPGSA
+                  %li Heatmap view threshold feature (currently whole result data only)
+                  %li Documentation of algorithm
 
     %footer.footer
       .container
