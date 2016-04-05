@@ -13,6 +13,11 @@ $(function(){
 
 // heat map rendering
 
+function setTableLink(){
+  var uuid = getUrlParameter('uuid');
+  $('a#viewTable').attr("href","/result?uuid=" + uuid);
+}
+
 function showHeatmap(){
   // height of each column in the heatmap
   var h = 12;
@@ -109,9 +114,4 @@ function showHeatmap(){
       expLab
         .style('display', 'none')
     });
-}
-
-function setTableLink(){
-  var uuid = getUrlParameter('uuid');
-  $('a#viewTable').attr("href","/result?uuid=" + uuid);
 }
