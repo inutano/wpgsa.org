@@ -66,7 +66,7 @@
                     .linkExample
                       %a.dataExample{ href: "/result?uuid=example", id: "exampleData" }
                         See result page of example data
-      .row.dataDescription
+      .row.dataDescription.description
         %h3
           About input data format
         %p
@@ -92,6 +92,26 @@
           %dd (gene name)(tab)(LFC of sample1)(tab)(LFC of sample2)(tab) … (LFC of sampleN)
           %dt Example:
           %dd Plekhg2(tab)-0.092(tab)0.170(tab) … 0.047
+
+      .row.changeLog.description
+        %h3 Change Log
+        %dl.dl-horizontal
+          %dt 5 April 2016
+          %dd Table view, bug report instruction
+          %dt 3 March 2016
+          %dd Added input data format description
+          %dt 29 February 2016
+          %dd Publish data download page
+          %dt 4 February 2016
+          %dd Launch website, upload data to run wPGSA, heatmap view
+
+        %h3 Future work
+        %ul
+          %li Faster execution of wPGSA
+          %li Heatmap view threshold feature (currently whole result data only)
+          %li Documentation of algorithm
+
+
 
     %footer.footer
       .container
