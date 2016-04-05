@@ -92,7 +92,12 @@ function buildTable(tsv){
     $.each(tsv, function(i, line){
       row = {};
       $.each(line, function(j, cont){
-        row['field_' + headerCols[j]] = cont;
+        if (j > 1) {
+          var v = parseFloat(cont).toFixed(4);
+        }else {
+          var v = cont;
+        }
+        row['field_' + headerCols[j]] = v;
       });
       data.push(row);
     });
