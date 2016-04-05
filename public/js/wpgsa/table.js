@@ -54,7 +54,10 @@ function buildTable(tsv){
       $.each(line, function(j, cont){
         if (j > 1) {
           var v = parseFloat(cont).toFixed(4);
-        }else {
+        }else if(j == 0) {
+          var linkout = "http://www.uniprot.org/uniprot?query=" + cont + "_MOUSE";
+          var v = '<a href="' + linkout + '">' + cont + '</a>';
+        }else{
           var v = cont;
         }
         row['field_' + headerCols[j]] = v;
