@@ -25,6 +25,12 @@ function showHeatmap(){
   // width of each column in the heatmap
   var w = 70;
 
+  // place empty div
+  var emptyBox = $('<div>').attr('class', 'emptyBox')
+    .css('width', (w * cols.length) + 400)
+    .css('height', (h * rows.length) + 100);
+  $('#heatmap').append(emptyBox);
+
   // attach a SVG element to the document body
   var mySVG = d3.select("#heatmap")
     .append("svg")
