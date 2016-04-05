@@ -36,15 +36,59 @@
               %a{ href: "https://github.com/eiryo-kawakami/wPGSA" }= "Documentation"
 
 
-    .jumbotron
-      .container
+    .container
+      .jumbotron
         %h1
           wPGSA
         %p.main-desc
-          Estimate relative activities of transcriptional regulators from transcriptome data
+          Estimate relative activities of transcriptional regulators from transcriptome data by weighted Parametric Gene Set Analysis: wPGSA.
 
-    .container.dataDescription
-      ~ markdown(:download, layout: false, fenced_code_blocks: true)
+    .container
+      .row
+        .col-md-12
+          .panel.panel-default
+            .panel-heading{ id: "downloadPeakData" }
+              %h2.panel-title= "Download TF binding peak data"
+            .panel-body.panel-body-desc
+              .panel-input
+                %p
+                  The detailed data of TF binding peak including location of the location of the peaks and the distance to the nearest transcription start site (TSS) annotated using the Bioconductor package ChIPpeakAnno and TSS annotation data “TSS.mouse.NCBIM37”.
+                %p
+                  %ul
+                    %li TF: The Uniprot symbol of transcription factor
+                    %li peak file: The name of the peak file. The corresponding TF and cell types can be found in the meta data (wPGSA_data_info.xlsx)
+                    %li space: The name of the chromosome
+                    %li start: The starting position of the peak in the chromosome
+                    %li end: The ending position of the peak in the chromosome
+                    %li width: The width of the peak
+                    %li strand: Either ‘+’ or ‘-‘. If ‘-‘, then the alignment of the feature is to the reverse-complemented source (usually ‘+')
+                    %li feature: The Ensemble Gene ID of the nearest gene
+                    %li start_position: The starting position of the nearest gene
+                    %li end_position: The ending position of the nearest gene
+                    %li feature_strand: The strand of the nearest gene
+                    %li insideFeature:
+                    %ul
+                      %li upstream: peak resides upstream of the gene gene
+                      %li downstream: peak resides down-stream of the gene
+                      %li inside: peak resides inside the gene
+                      %li overlapStart: peak overlaps with the start of the gene
+                      %li overlapEnd: peak overlaps with the end of the gene
+                      %li includeFeature: peak include the gene (impractical)
+                    %li distancetoFeature: distance between the start of the peak and the TSS of the nearest gene
+                %p
+                  %a{ href: "http://web.ims.riken.jp/en/paper_data/wPGSA_ChIPpeak_detailed_info.tar.bz2" } Download TF binding peak data
+
+    .container
+      .row
+        .col-md-12
+          .panel.panel-default
+            .panel-heading{ id: "downloadDataList" }
+              %h2.panel-title= "Download ChIP data list"
+            .panel-body.panel-body-desc
+              .panel-input
+                %p ChIP data list provides metadata for each ChIP experiment.
+                %p
+                  %a{ href: "/data/wPGSA_data_info.xlsx" } Donwload data list (.xlsx)
 
     %footer.footer
       .container
