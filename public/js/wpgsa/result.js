@@ -8,10 +8,8 @@ $(function(){
   setResultPageHeader();
   // set buttons to download result files
   setDownloadButtons();
-  // show result table
-  showResultTable();
-  // fix table header and cols
-  fixTableHeader();
+  // build table and fix header and the column of tf name
+  buildTable();
   // set linkout to heatmap
   setHeatmapLink();
 });
@@ -68,43 +66,48 @@ function setDownloadButtons(){
   setDownloadLink($('a#zScore'), "z-score");
 }
 
-function addTableHeader(table, headerCols){
-  var row = $('<tr>')
-  $.each(headerCols, function(i, e){
-    row.append('<th>' + e + '</th>');
-  });
-  table.append($('<thead>').append(row));
-}
-
-function addTableContents(table, tsv){ // input tsv without header columns
-  var tbody = $('tbody');
-  $.each(tsv, function(i, line){
-    var tr = $('<tr>')
-    $.each(line, function(ie, el){
-      var cont = el;
-      tr.append('<td>'+cont+'</td>')
-    });
-    tbody.append(tr);
-  });
-  table.append(tbody);
-}
-
-function showResultTable(){
-  var resultTable = $('table#resultTable');
+function buildTable(tsv){
   var uuid = getUrlParameter('uuid');
-  getResultData(uuid, "z-score", "tsv").done(function(data){
-    var tsv     = $.tsv.toArrays(data);
+  getResultData(uuid, "z-score", "tsv").done(function(tsvData){
+    var tsv     = $.tsv.toArrays(tsvData);
     var header  = tsv.splice(0,1)[0];
     var fixed   = header.splice(0,3); // remove fixed cols, tf, #experiments, mean z-score
     var samples = header;             // remaning cols are array of samples
     var headerCols = $.merge(['TF', '#Experiments', 'mean Z-score'], samples);
-    addTableHeader(resultTable, headerCols);
-    addTableContents(resultTable, tsv);
-  });
-}
 
-function fixTableHeader(){
-  var table = $('table#resultTable');
+    var row;
+    var columns = [];
+    var data = [];
+
+    $.each(headerCols, function(i, el){
+      columns.push({
+        field: 'field_' + el,
+        title: el,
+        sortable: true
+      });
+    });
+
+    //console.log(tsv[0]);
+
+    $.each(tsv, function(i, line){
+      row = {};
+      $.each(line, function(j, cont){
+        row['field_' + headerCols[j]] = cont;
+      });
+      data.push(row);
+    });
+
+    var table = $('table#resultTable');
+    table.bootstrapTable('destroy').bootstrapTable({
+      columns: columns,
+      data: data,
+      //search: true,
+      toolbar: '.toolbar',
+      fixedHeader: true,
+      fixedColumns: true,
+      fixedNumber: 1,
+    });
+  });
 }
 
 function setHeatmapLink(){
