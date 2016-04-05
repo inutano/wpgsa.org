@@ -12,8 +12,6 @@
 
     // Bootstrap core and typeahead CSS
     %link{ href: "#{app_root}/css/bootstrap.min.css", rel: "stylesheet" }
-    /
-      %link{ href: "#{app_root}/css/typeaheadjs.css", rel: "stylesheet" }
 
     // Custom style for this website
     %link{ href: "#{app_root}/style.css", rel: "stylesheet"}
@@ -78,7 +76,7 @@
                       %li includeFeature: peak include the gene (impractical)
                     %li distancetoFeature: distance between the start of the peak and the TSS of the nearest gene
                 %p
-                  %a{ href: "http://web.ims.riken.jp/en/paper_data/wPGSA_ChIPpeak_detailed_info.tar.bz2" } Download TF binding peak data
+                  %a.btn.btn-primary.downloadLink{ href: "http://web.ims.riken.jp/en/paper_data/wPGSA_ChIPpeak_detailed_info.tar.bz2" } Download TF binding peak data
 
     .container
       .row
@@ -90,7 +88,7 @@
               .panel-input
                 %p ChIP data list provides metadata for each ChIP experiment.
                 %p
-                  %a{ href: "/data/wPGSA_data_info.xlsx" } Donwload data list (.xlsx)
+                  %a.btn.btn-primary.downloadLink{ href: "/data/wPGSA_data_info.xlsx" } Donwload data list (.xlsx)
 
     %footer.footer
       .container
@@ -107,11 +105,3 @@
     %script{ src: "#{app_root}/js/bootstrap.min.js" }
     %script{ src: "#{app_root}/js/ie10-viewport-bug-workaround.js" }
     %script{ src: "#{app_root}/js/liquidmetal.js" }
-    %script{ src: "#{app_root}/js/bootstrap-filestyle.min.js" }
-    %script{ src: "#{app_root}/js/wpgsa/wpgsa.js" }
-    %script{ src: "#{app_root}/js/wpgsa/upload.js" }
-
-    /
-      %script{ src: "#{app_root}/js/typeahead.bundle.js" }
-      %script{ src: "#{app_root}/js/jquery.flexselect.js" }
-      %link{ href: "#{app_root}/css/flexselect.css", rel: "stylesheet", type: "text/css", media: "screen" }
