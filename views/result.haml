@@ -41,11 +41,11 @@
 
     .container
       %row
-        .col-md-8
+        .col-md-7
           %h2
             wPGSA Result
         .col-md-2
-          .btn-group.downloadButton{ role: "group" }
+          .btn-group.navButton{ role: "group" }
             .dropdown
               .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
                 View Heatmap
@@ -55,7 +55,7 @@
                   %a#viewHeatmap
                     full data
         .col-md-2
-          .btn-group.downloadButton{ role: "group" }
+          .btn-group.navButton{ role: "group" }
             .dropdown
               .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
                 Download TSV
@@ -70,6 +70,12 @@
                 %li
                   %a#zScore
                     z-score
+        .col-md-1
+          .btn-group.navButton{ role: "group" }
+            %a{ :href => "#" }
+              .button.btn.btn-primary.btn-lg.helpButton
+                %span.glyphicon.glyphicon-question-sign{ "aria-hidden" => true }
+
       %row
         .col-md-12
           %hr
