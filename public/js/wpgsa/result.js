@@ -8,10 +8,6 @@ $(function(){
   setResultPageHeader();
   // set buttons to download result files
   setDownloadButtons();
-  // build table and fix header and the column of tf name
-  buildTable();
-  // set linkout to heatmap
-  setHeatmapLink();
 });
 
 // functions
@@ -64,60 +60,4 @@ function setDownloadButtons(){
   setDownloadLink($('a#pValue'), "p-value");
   setDownloadLink($('a#qValue'), "q-value");
   setDownloadLink($('a#zScore'), "z-score");
-}
-
-function buildTable(tsv){
-  var uuid = getUrlParameter('uuid');
-  getResultData(uuid, "z-score", "tsv").done(function(tsvData){
-    var tsv     = $.tsv.toArrays(tsvData);
-    var header  = tsv.splice(0,1)[0];
-    var fixed   = header.splice(0,3); // remove fixed cols, tf, #experiments, mean z-score
-    var samples = header;             // remaning cols are array of samples
-    var headerCols = $.merge(['TF', '#Experiments', 'mean Z-score'], samples);
-
-    var row;
-    var columns = [];
-    var data = [];
-
-    $.each(headerCols, function(i, el){
-      columns.push({
-        field: 'field_' + el,
-        title: el,
-        sortable: true
-      });
-    });
-
-    //console.log(tsv[0]);
-
-    $.each(tsv, function(i, line){
-      row = {};
-      $.each(line, function(j, cont){
-        if (j > 1) {
-          var v = parseFloat(cont).toFixed(4);
-        }else {
-          var v = cont;
-        }
-        row['field_' + headerCols[j]] = v;
-      });
-      data.push(row);
-    });
-
-    var table = $('table#resultTable');
-    table.bootstrapTable('destroy').bootstrapTable({
-      columns: columns,
-      data: data,
-      //search: true,
-      toolbar: '.toolbar',
-      fixedHeader: true,
-      fixedColumns: true,
-      fixedNumber: 1,
-    });
-  });
-}
-
-function setHeatmapLink(){
-  var uuid = getUrlParameter('uuid');
-  $('button#viewHeatmap').on('click', function(){
-    window.open('/result/heatmap?uuid=' + uuid, "_self", "");
-  });
 }

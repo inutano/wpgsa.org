@@ -38,10 +38,15 @@
 
     .container
       %row
-        .col-md-9
+        .col-md-8
           %h2
             wPGSA Result
-        .col-md-3
+        .col-md-2
+          .btn-group.downloadButton{ role: "group" }
+            %a#viewTable
+              .button.btn.btn-primary.btn-lg
+                View Data Table
+        .col-md-2
           .btn-group.downloadButton{ role: "group" }
             .dropdown
               .button.btn.btn-primary.btn-lg.dropdown-toggle{ :type => "button", :id => "download-dropdown", "data-toggle" => "dropdown", "aria-haspopup" => true, "aria-expanded" => true }
