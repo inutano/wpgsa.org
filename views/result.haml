@@ -76,7 +76,22 @@
           .btn-group.navButton{ role: "group" }
             %a{ :href => "#" }
               .button.btn.btn-primary.btn-lg.helpButton
-                %span.glyphicon.glyphicon-question-sign{ "aria-hidden" => true }
+                %span.glyphicon.glyphicon-question-sign{ "aria-hidden" => true, "data-toggle" => "modal", "data-target" => "#tableDescription" }
+
+          .modal.fade#tableDescription{ tablindex: "-1", role: "dialog", "aria-labelledby" => "tableDescriptionLabel"}
+            .modal-dialog{ role: "document" }
+              .modal-content
+                .modal-header
+                  %button.close{ type: "button", "data-dismiss" => "modal", "aria-label" => "Close" }
+                    %span{ "aria-hidden" => true }= "&times;"
+                  %h4.modal-title#tableDescriptionLabel
+                    wPGSA Result Table View
+                .modal-body
+                  %h3 Data table description
+                  %ul
+                    %li 1st column: tf symbol
+                    %li 2nd column: number of experiments
+                    %li 3rd column: mean z-score
 
       %row
         .col-md-12
