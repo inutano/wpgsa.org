@@ -52,17 +52,21 @@ function buildTable(tsv){
     $.each(tsv, function(i, line){
       row = {};
       $.each(line, function(j, cont){
-        if (j > 1) {
-          var v = parseFloat(cont).toFixed(4);
-        }else if(j == 0) {
-          var linkout = "http://www.uniprot.org/uniprot?query=" + cont + "_MOUSE";
-          var v = '<a href="' + linkout + '" target="_blank">' + cont + '</a>';
-        }else{
-          var v = cont;
+        if (cont) {
+          if (j > 1) {
+            var v = parseFloat(cont).toFixed(4);
+          }else if(j == 0) {
+            var linkout = "http://www.uniprot.org/uniprot?query=" + cont + "_MOUSE";
+            var v = '<a href="' + linkout + '" target="_blank">' + cont + '</a>';
+          }else{
+            var v = cont;
+          }
+          row['field_' + headerCols[j]] = v;
         }
-        row['field_' + headerCols[j]] = v;
       });
-      data.push(row);
+      if (!$.isEmptyObject(row)) {
+        data.push(row);
+      }
     });
 
     var table = $('table#resultTable');
