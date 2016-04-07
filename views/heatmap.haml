@@ -41,7 +41,7 @@
 
     .container
       %row
-        .col-md-8
+        .col-md-7
           %h2
             wPGSA Result
         .col-md-2
@@ -65,6 +65,25 @@
                 %li
                   %a#zScore
                     z-score
+        .col-md-1
+          .btn-group.navButton{ role: "group" }
+            %a{ :href => "#" }
+              .button.btn.btn-primary.btn-lg.helpButton
+                %span.glyphicon.glyphicon-question-sign{ "aria-hidden" => true, "data-toggle" => "modal", "data-target" => "#heatmapDescription" }
+
+          .modal.fade#heatmapDescription{ tablindex: "-1", role: "dialog", "aria-labelledby" => "heatmapDescriptionLabel"}
+            .modal-dialog{ role: "document" }
+              .modal-content
+                .modal-header
+                  %button.close{ type: "button", "data-dismiss" => "modal", "aria-label" => "Close" }
+                    %span{ "aria-hidden" => true }= "&times;"
+                  %h4.modal-title#heatmapDescriptionLabel
+                    wPGSA Result Heatmap View
+                .modal-body
+                  %h3 Heatmap
+                  %p
+                    The individual Z-score of each experimental condition (vertical) and each TF (horizontal). The corresponding TF and the detailed data for the horizontal line can be seen by hovering the mouse over.
+
       %row
         .col-md-12
           %hr

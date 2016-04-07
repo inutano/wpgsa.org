@@ -87,11 +87,20 @@
                   %h4.modal-title#tableDescriptionLabel
                     wPGSA Result Table View
                 .modal-body
-                  %h3 Data table description
-                  %ul
-                    %li 1st column: tf symbol
-                    %li 2nd column: number of experiments
-                    %li 3rd column: mean z-score
+                  %h3 Data table
+                  %dl.dl-horizontal
+                    %dt TF:
+                    %dd
+                      The Uniprot entry name of a transcription factor. Click the TF name to look up the TF information in
+                      %a{ href: "http://www.uniprot.org", target: "_blank" }
+                        Uniprot
+                      \.
+                    %dt #Experiments:
+                    %dd The number of ChIP experiments for the TF.
+                    %dt mean Z-score:
+                    %dd The averaged Z-score of all the experimental conditions.
+                    %dt 4th column onwards:
+                    %dd The individual Z-score of each experimental condition.
 
       %row
         .col-md-12
