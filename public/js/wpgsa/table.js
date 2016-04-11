@@ -35,7 +35,7 @@ function buildTable(tsv){
     var header  = tsv.splice(0,1)[0];
     var fixed   = header.splice(0,3); // remove fixed cols, tf, #experiments, mean z-score
     var samples = header;             // remaning cols are array of samples
-    var headerCols = $.merge(['TF', '#Experiments', 'mean Z-score'], samples);
+    var headerCols = $.merge(['TF', '#Experiments', 'mean Enrichment Score'], samples);
 
     var row;
     var columns = [];
