@@ -59,5 +59,5 @@ function setDownloadLink(element, type){
 function setDownloadButtons(){
   setDownloadLink($('a#pValue'), "p-value");
   setDownloadLink($('a#qValue'), "q-value");
-  setDownloadLink($('a#zScore'), "z-score");
+  setDownloadLink($('a#tScore'), "t-score");
 }

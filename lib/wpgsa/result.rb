@@ -23,8 +23,8 @@ module WPGSA
         p_value
       when "q-value"
         q_value
-      when "z-score"
-        z_score
+      when "t-score"
+        t_score
       when "input"
         input_data
       when "network"
@@ -40,8 +40,8 @@ module WPGSA
       glob("q_value.txt")
     end
 
-    def z_score
-      glob("z_score.txt")
+    def t_score
+      glob("t_score.txt")
     end
 
     def network_data
@@ -54,7 +54,7 @@ module WPGSA
 
     def input_data
       fpath = Dir.glob(@data_dir+"/*").select do |f|
-        f != p_value && f != q_value && f != z_score && f != network_data && f != hclust
+        f != p_value && f != q_value && f != t_score && f != network_data && f != hclust
       end
       fpath[0]
     end

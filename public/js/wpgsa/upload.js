@@ -40,8 +40,8 @@ function uploadExpressionData(){
     // get upload data
     var formData = new FormData($('form#uploadUserDataFile').get(0));
     UserData.upload(formData).done(function(json){
-      var zScoreDataPath = $.grep(json, function(url){ return url.includes("z_score"); });
-      var uuid = zScoreDataPath[0].split("/")[1];
+      var tScoreDataPath = $.grep(json, function(url){ return url.includes("t_score"); });
+      var uuid = tScoreDataPath[0].split("/")[1];
       var redirectUrl = '/result?uuid=' + uuid
       // finish upload sequence
       removeLoading();

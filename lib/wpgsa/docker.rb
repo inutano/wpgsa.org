@@ -14,7 +14,7 @@ module WPGSA
     end
 
     def wpgsa_container_id
-      "inutano/wpgsa:0.4.2"
+      "inutano/wpgsa:0.5.0"
     end
 
     def init_workdir(workdir)
@@ -51,9 +51,9 @@ module WPGSA
     end
 
     def run_hclust
-      z_score = Dir.glob(@workdir+"/*z_score*").first.split("/").last
+      t_score = Dir.glob(@workdir+"/*t_score*").first.split("/").last
       docker_cmd = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
-      arguments  = "/data/#{z_score} > #{@workdir}/data.hclust.js"
+      arguments  = "/data/#{t_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
     end
 

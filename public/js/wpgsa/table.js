@@ -30,10 +30,10 @@ function waitTable(){
 function buildTable(tsv){
   // start build
   var uuid = getUrlParameter('uuid');
-  getResultData(uuid, "z-score", "tsv").done(function(tsvData){
+  getResultData(uuid, "t-score", "tsv").done(function(tsvData){
     var tsv     = $.tsv.toArrays(tsvData);
     var header  = tsv.splice(0,1)[0];
-    var fixed   = header.splice(0,3); // remove fixed cols, tf, #experiments, mean z-score
+    var fixed   = header.splice(0,3); // remove fixed cols, tf, #experiments, mean t-score
     var samples = header;             // remaning cols are array of samples
     var headerCols = $.merge(['TF', '#Experiments', 'mean Enrichment Score'], samples);
 
