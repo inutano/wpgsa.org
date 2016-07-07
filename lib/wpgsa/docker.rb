@@ -31,8 +31,8 @@ module WPGSA
     end
 
     def staging_input_data(input_file) # return input file name
-      fname = input_file[:filename]
-      open(File.join(@workdir, fname), "w"){|f| f.puts(input_file[:tempfile].read) }
+      fname = URI.encode(input_file[:filename].encode('utf-8'))
+      open(File.join(@workdir, fname), "w"){|f| f.puts(input_file[:tempfile].read.encode('utf-8')) }
       fname
     end
 
