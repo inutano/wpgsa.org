@@ -52,7 +52,7 @@ function uploadExpressionData(){
       // finish upload sequence
       removeLoading();
       button.prop("disable", false);
-      alert("Error!");
+      alert("An error occurred during the process.\n\nCheck your file format and make sure to use recommended browsers (Latest Google Chrome or Safari). If you can not solve this problem yourself, contact us from 'report issues' on menu bar.");
     });
     return false;
   });

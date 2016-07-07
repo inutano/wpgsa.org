@@ -48,6 +48,7 @@ module WPGSA
       network_argument = "--network-file /data/#{@network_file}"
       cmd = [docker_cmd, input_argument, network_argument].join("\s")
       `#{cmd}`
+      raise NameError if $? != 0
     end
 
     def run_hclust
@@ -55,6 +56,7 @@ module WPGSA
       docker_cmd = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
       arguments  = "/data/#{t_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
+      raise NameError if $? != 0
     end
 
     def publish_result
@@ -66,6 +68,8 @@ module WPGSA
       run_hclust
       publish_result
       Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
+    rescue NameError
+      nil
     end
 
     def dry_run

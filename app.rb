@@ -51,7 +51,12 @@ class WpgsaApp < Sinatra::Base
       network_file_path = settings.config["network_file_path"]
       d = WPGSA::Docker.new(params[:file], workdir, network_file_path)
       content_type "application/json"
-      JSON.dump(d.wpgsa_results)
+      r = d.wpgsa_results
+      if r
+        JSON.dump(r)
+      else
+        status 500
+      end
     end
   end
 
