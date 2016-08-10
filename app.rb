@@ -50,20 +50,18 @@ class WpgsaApp < Sinatra::Base
       workdir = settings.config["workdir"]
       network_file_path = settings.config["network_file_path"]
       d = WPGSA::Docker.new(params[:file], workdir, network_file_path)
-      content_type "application/json"
       r = d.wpgsa_results
       if r
+        content_type "application/json"
         JSON.dump(r)
       else
+        warn "wPGSA execution failed: #{Time.now}"
+        warn "  Filename: #{params[:file][:filename]}"
+        warn "  File: #{params[:file][:tempfile]}"
+        warn "  Result JSON data: #{d}"
         status 500
       end
     end
-  rescue
-    warn "Failed to upload data: #{Time.now}"
-    warn "  Filename: #{params[:file][:filename]}"
-    warn "  File: #{params[:file][:tempfile]}"
-    warn "  Result JSON data: #{d}"
-    exit 1
   end
 
   get "/wpgsa/result" do
