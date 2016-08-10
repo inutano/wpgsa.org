@@ -58,6 +58,12 @@ class WpgsaApp < Sinatra::Base
         status 500
       end
     end
+  rescue
+    warn "Failed to upload data: #{Time.now}"
+    warn "  Filename: #{params[:file][:filename]}"
+    warn "  File: #{params[:file][:tempfile]}"
+    warn "  Result JSON data: #{d}"
+    exit 1
   end
 
   get "/wpgsa/result" do
