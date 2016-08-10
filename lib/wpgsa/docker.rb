@@ -32,8 +32,14 @@ module WPGSA
 
     def staging_input_data(input_file) # return input file name
       fname = input_file[:filename].encode('utf-8', :invalid => :replace, :undef => :replace ).gsub(/\s/,"_")
-      open(File.join(@workdir, fname), "w"){|f| f.puts(input_file[:tempfile].read.encode('utf-8')) }
+      input_data = input_file[:tempfile].read.encode('utf-8')
+      open(File.join(@workdir, fname), "w"){|f| f.puts(input_data) }
       fname
+    rescue
+      warn "Failed to stage input data: #{Time.now}"
+      warn "  Filename: #{fname}"
+      warn "  File: #{input_file[:tempfile].read}"
+      exit 1
     end
 
     def staging_network_file(network_file_path) # return network file name
