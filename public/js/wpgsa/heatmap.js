@@ -7,8 +7,9 @@
 $(function(){
   if (typeof cols === "undefined") {
     // show message when heatmap is not available
-    var mes = "Heatmap is not available for this sample. <br /> If you have trouble with rendering a heatmap, let us know from 'Report Problem' above."
-    $("#heatmap").append("<h4>" + mes + "</h2>");
+    var hd = "Heatmap is not available for your input data.";
+    var mes = "Probably your sample size is too small for clustering, try with data with more than two samples. If you have trouble with rendering a heatmap, let us know from 'Report Problem' above.";
+    $("#heatmap").append("<h4>" + hd + "</h2><p>" + mes + "</p>");
   }else {
     // show heat map from json data
     showHeatmap();
