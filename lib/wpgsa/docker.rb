@@ -39,7 +39,6 @@ module WPGSA
       warn "Failed to stage input data: #{Time.now}"
       warn "  Filename: #{fname}"
       warn "  File: #{input_file[:tempfile].read}"
-      exit 1
     end
 
     def staging_network_file(network_file_path) # return network file name
