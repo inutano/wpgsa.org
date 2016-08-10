@@ -57,8 +57,8 @@ class WpgsaApp < Sinatra::Base
       else
         warn "wPGSA execution failed: #{Time.now}"
         warn "  Filename: #{params[:file][:filename]}"
-        warn "  File: #{params[:file][:tempfile]}"
-        warn "  Result JSON data: #{d}"
+        warn "  File: #{params[:file][:tempfile].read}"
+        warn "  Result JSON data: #{r}"
         status 500
       end
     end

@@ -75,6 +75,11 @@ module WPGSA
       publish_result
       Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
     rescue NameError
+      warn "uuid: " + @uuid
+      warn "working directory: " + @workdir
+      warn "data directory: " + @datadir
+      warn "input data: " + @input_data
+      warn "network file: " + @network_file
       nil
     end
 
