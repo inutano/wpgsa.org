@@ -13,9 +13,9 @@ $(function(){
   }else {
     // show heat map from json data
     showHeatmap();
-    // set linkout to table view
-    setTableLink();
   }
+  // set linkout to table view
+  setTableLink();
 });
 
 // heat map rendering
