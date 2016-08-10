@@ -62,7 +62,8 @@ module WPGSA
       docker_cmd = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
       arguments  = "/data/#{t_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
-      raise NameError if $? != 0
+      # 1 column data (expression data of 1 sample) will not have clustering data, escape
+      # raise NameError if $? != 0
     end
 
     def publish_result

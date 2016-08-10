@@ -5,10 +5,16 @@
 
 // onload
 $(function(){
-  // show heat map from json data
-  showHeatmap();
-  // set linkout to table view
-  setTableLink();
+  if (typeof cols === "undefined") {
+    // show message when heatmap is not available
+    var mes = "Heatmap is not available for this sample. <br /> If you have trouble with rendering a heatmap, let us know from 'Report Problem' above."
+    $("#heatmap").append("<h4>" + mes + "</h2>");
+  }else {
+    // show heat map from json data
+    showHeatmap();
+    // set linkout to table view
+    setTableLink();
+  }
 });
 
 // heat map rendering
