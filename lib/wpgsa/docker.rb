@@ -49,8 +49,8 @@ module WPGSA
 
     def run_wpgsa
       docker_cmd       = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} wpgsa"
-      input_argument   = "--logfc-file /data/#{@input_data}"
-      network_argument = "--network-file /data/#{@network_file}"
+      input_argument   = "--logfc-file \"/data/#{@input_data}\""
+      network_argument = "--network-file \"/data/#{@network_file}\""
       cmd = [docker_cmd, input_argument, network_argument].join("\s")
       `#{cmd}`
       raise NameError if $? != 0
