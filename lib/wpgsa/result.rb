@@ -9,7 +9,7 @@ module WPGSA
     end
 
     def read
-      open(result_file_path).read
+      File.open(result_file_path).read
     end
 
     def to_json
@@ -64,7 +64,7 @@ module WPGSA
     end
 
     def parse_tsv(file_path)
-      open(file_path).readlines.map do |ln|
+      File.open(file_path).readlines.map do |ln|
         ln.chomp.split("\t")
       end
     end
