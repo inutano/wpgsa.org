@@ -40,3 +40,5 @@ build/
 
 .sass-cache
 public/data
+log
+data/merged_mouse_v7_160212.network
