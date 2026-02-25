@@ -56,7 +56,7 @@ function buildTable(tsv){
           if (j > 1) {
             var v = parseFloat(cont).toFixed(4);
           }else if(j == 0) {
-            var linkout = "http://www.uniprot.org/uniprot?query=" + cont + "_MOUSE";
+            var linkout = "https://www.uniprot.org/uniprot?query=" + cont + "_MOUSE";
             var v = '<a href="' + linkout + '" target="_blank">' + cont + '</a>';
           }else{
             var v = cont;
