@@ -15,7 +15,8 @@ require 'lib/wpgsa'
 class WpgsaApp < Sinatra::Base
   helpers do
     def app_root
-      "#{env["rack.url_scheme"]}://#{env["HTTP_HOST"]}#{env["SCRIPT_NAME"]}"
+      scheme = env["HTTP_X_FORWARDED_PROTO"] || env["rack.url_scheme"]
+      "#{scheme}://#{env["HTTP_HOST"]}#{env["SCRIPT_NAME"]}"
     end
   end
 
