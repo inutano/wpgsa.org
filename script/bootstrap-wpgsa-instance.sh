@@ -64,6 +64,7 @@ create_app_user() {
   if ! id -u "$APP_USER" >/dev/null 2>&1; then
     useradd --system --create-home --home-dir /home/"$APP_USER" --shell /bin/bash "$APP_USER"
   fi
+  usermod -aG docker "$APP_USER"
 }
 
 install_bundler() {
@@ -115,7 +116,7 @@ User=$APP_USER
 Group=$APP_GROUP
 WorkingDirectory=$APP_DIR
 Environment=RACK_ENV=production
-ExecStart=/usr/local/bin/bundle exec rackup --host $APP_HOST --port $APP_PORT
+ExecStart=/usr/bin/env bundle exec rackup --host $APP_HOST --port $APP_PORT
 Restart=always
 RestartSec=5
 StandardOutput=journal
