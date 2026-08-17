@@ -124,20 +124,30 @@ launch_instance() {
     iam_args=(--iam-instance-profile "Name=${INSTANCE_PROFILE_NAME}")
   fi
 
-  aws ec2 run-instances \
-    --region "$REGION" \
-    --image-id "resolve:ssm:/aws/service/ami-amazon-linux-latest/${AMI_PARAM}" \
-    --instance-type "$INSTANCE_TYPE" \
-    --subnet-id "$subnet_id" \
-    --security-group-ids "$sg_id" \
-    --key-name "$KEY_NAME" \
-    --associate-public-ip-address \
-    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":${ROOT_VOLUME_SIZE},\"VolumeType\":\"gp3\",\"DeleteOnTermination\":true}}]" \
-    --tag-specifications "$TAG_SPEC" \
-    --user-data "file://${user_data_file}" \
-    "${iam_args[@]}" \
-    --query 'Instances[0].InstanceId' \
+  local cmd=(
+    aws ec2 run-instances
+    --region "$REGION"
+    --image-id "resolve:ssm:/aws/service/ami-amazon-linux-latest/${AMI_PARAM}"
+    --instance-type "$INSTANCE_TYPE"
+    --subnet-id "$subnet_id"
+    --security-group-ids "$sg_id"
+    --key-name "$KEY_NAME"
+    --associate-public-ip-address
+    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":${ROOT_VOLUME_SIZE},\"VolumeType\":\"gp3\",\"DeleteOnTermination\":true}}]"
+    --tag-specifications "$TAG_SPEC"
+    --user-data "file://${user_data_file}"
+  )
+
+  if [ "${#iam_args[@]}" -gt 0 ]; then
+    cmd+=("${iam_args[@]}")
+  fi
+
+  cmd+=(
+    --query 'Instances[0].InstanceId'
     --output text
+  )
+
+  "${cmd[@]}"
 }
 
 associate_eip() {
