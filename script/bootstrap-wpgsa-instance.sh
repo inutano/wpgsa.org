@@ -78,6 +78,11 @@ create_app_user() {
   usermod -aG docker "$APP_USER"
 }
 
+start_docker() {
+  log "starting Docker daemon"
+  systemctl enable --now docker
+}
+
 configure_swap() {
   if swapon --show | grep -q '/swapfile'; then
     log "swap already active"
@@ -172,8 +177,6 @@ WantedBy=multi-user.target
 EOF
 
   systemctl daemon-reload
-  systemctl enable docker
-  systemctl restart docker
   systemctl enable wpgsa
   systemctl restart wpgsa
 }
@@ -376,6 +379,7 @@ main() {
   install_packages
   configure_swap
   create_app_user
+  start_docker
   install_bundler
   checkout_app
   configure_app
