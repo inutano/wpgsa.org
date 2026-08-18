@@ -35,13 +35,25 @@ class WpgsaApp < Sinatra::Base
   end
 
   get "/result" do
-    @uuid = params[:uuid] if params[:uuid]
+    if params[:uuid]
+      WPGSA.validate_data_id!(params[:uuid])
+      @uuid = params[:uuid]
+    end
     haml :result
+  rescue WPGSA::InvalidDataId
+    status 404
+    haml :not_found
   end
 
   get "/result/heatmap" do
-    @uuid = params[:uuid] if params[:uuid]
+    if params[:uuid]
+      WPGSA.validate_data_id!(params[:uuid])
+      @uuid = params[:uuid]
+    end
     haml :heatmap
+  rescue WPGSA::InvalidDataId
+    status 404
+    haml :not_found
   end
 
   post "/wpgsa/result" do

@@ -42,8 +42,20 @@ module WPGSA
       datadir
     end
 
+    # A fixed prefix plus a sanitised basename of the client-supplied
+    # filename. The container is invoked with an argv array (see
+    # wpgsa_command below), so this only needs to be filesystem- and
+    # web-safe, not shell-safe -- but the staged file is also copied
+    # verbatim into the web-served public/data/<uuid>/ directory by
+    # publish_result, so an unsanitised name (e.g. "evil.js") would be
+    # served from the site's own origin as JavaScript. Restrict it to a
+    # safe character set and strip any leading dots so it can't resolve to
+    # a dotfile or, in combination with a traversal-ish uuid, escape the
+    # job directory.
+    SAFE_INPUT_BASENAME_PATTERN = /[^A-Za-z0-9._-]/
+
     def staging_input_data(input_file) # return input file name
-      fname = input_file[:filename].encode('utf-8', :invalid => :replace, :undef => :replace ).gsub(/\s/,"_")
+      fname = safe_input_filename(input_file[:filename])
       input_data = input_file[:tempfile].read.encode('utf-8')
       open(File.join(@workdir, fname), "w"){|f| f.puts(input_data) }
       fname
@@ -51,6 +63,17 @@ module WPGSA
       warn "Failed to stage input data: #{Time.now}"
       warn "  Filename: #{fname}"
       warn "  File: #{input_file[:tempfile].read}"
+    end
+
+    def safe_input_filename(raw_filename)
+      basename = raw_filename.to_s
+        .encode('utf-8', :invalid => :replace, :undef => :replace)
+        .gsub(/\s/, "_")
+      basename = File.basename(basename)
+      basename = basename.gsub(SAFE_INPUT_BASENAME_PATTERN, "_")
+      basename = basename.sub(/\A\.+/, "")
+      basename = "input" if basename.empty?
+      "input-data-#{basename}"
     end
 
     def staging_network_file(network_file_path) # return network file name

@@ -1,5 +1,7 @@
 require_relative "test_helper"
 require "lib/wpgsa"
+require "tmpdir"
+require "stringio"
 
 class TestDockerCommand < Minitest::Test
   def build(input_data: "sample.txt", network_file: "net.network")
@@ -51,5 +53,72 @@ class TestDockerCommand < Minitest::Test
     cmd = build.hclust_command("sample.t_score.txt")
     refute_includes cmd, ">"
     refute(cmd.any? { |a| a.include?(">") })
+  end
+
+  def test_safe_input_filename_strips_directory_components
+    assert_equal "input-data-evil.js", build.safe_input_filename("../../evil.js")
+  end
+
+  def test_safe_input_filename_sanitises_unsafe_characters
+    name = build.safe_input_filename("evil.js?/data.hclust.js")
+    refute_includes name, "/"
+    refute_includes name, "?"
+    assert_match(/\A[A-Za-z0-9._-]+\z/, name)
+  end
+
+  def test_safe_input_filename_strips_leading_dots
+    name = build.safe_input_filename("....htaccess")
+    refute name.start_with?(".")
+  end
+
+  def test_safe_input_filename_handles_a_blank_name
+    name = build.safe_input_filename("")
+    assert_match(/\A[A-Za-z0-9._-]+\z/, name)
+  end
+end
+
+# Integration-level test for Docker.new / staging / publish_result. This
+# exercises real filesystem side effects (Docker#init_datadir hardcodes
+# public/data/<uuid>), so it cleans up the directories it creates.
+class TestDockerStagingHostileFilename < Minitest::Test
+  def uploaded_file(filename, body = "a\tb\tc\n")
+    { filename: filename, tempfile: StringIO.new(body) }
+  end
+
+  def with_network_file
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "merged_mouse_150904_trim.network")
+      File.write(path, "network contents")
+      yield path
+    end
+  end
+
+  def cleanup(docker)
+    FileUtils.rm_rf(docker.workdir)
+    FileUtils.rm_rf(docker.datadir)
+  end
+
+  # Finding 3: a hostile upload filename (e.g. one that resolves to a
+  # same-origin script path once copied into public/data/<uuid>/) must not
+  # survive staging or publishing under its original name.
+  def test_hostile_upload_filename_does_not_survive_into_the_published_path
+    with_network_file do |network_file_path|
+      Dir.mktmpdir do |workdir_root|
+        docker = WPGSA::Docker.new(uploaded_file("../../evil.js?/data.hclust.js"), workdir_root, network_file_path)
+        begin
+          refute_equal "../../evil.js?/data.hclust.js", docker.input_data
+          refute_includes docker.input_data, "/"
+          refute_includes docker.input_data, "?"
+
+          docker.publish_result
+
+          published = Dir.children(docker.datadir)
+          refute_includes published, "evil.js"
+          assert_includes published, docker.input_data
+        ensure
+          cleanup(docker)
+        end
+      end
+    end
   end
 end
