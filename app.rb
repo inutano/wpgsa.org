@@ -6,7 +6,6 @@ $LOAD_PATH << File.join(__dir__, "lib")
 
 require 'sinatra'
 require 'haml'
-require 'sass'
 require 'yaml'
 require 'json'
 
@@ -22,10 +21,6 @@ class WpgsaApp < Sinatra::Base
 
   configure do
     set :config, YAML.load_file("./config.yaml")
-  end
-
-  get "/:source.css" do
-    sass params[:source].intern
   end
 
   get "/" do

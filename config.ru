@@ -1,6 +1,5 @@
-require "bundler"
-require "rack/protection"
-Bundler.require
+require "bundler/setup"
+Bundler.require(:default)
 
-require File.dirname(__FILE__) + "/app"
+require File.expand_path("app", __dir__)
 run WpgsaApp

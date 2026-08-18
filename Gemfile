@@ -3,12 +3,9 @@ source 'https://rubygems.org'
 ruby '>= 3.2'
 
 gem 'sinatra'
-gem 'rake'
+gem 'puma'
 gem 'haml'
-gem 'sass'
-gem 'redcarpet'
-gem 'rack-protection'
-gem 'rackup'
+gem 'rake'
 
 group :test do
   gem 'minitest'
