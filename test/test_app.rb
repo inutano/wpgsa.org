@@ -72,6 +72,16 @@ class TestApp < Minitest::Test
     assert last_response.ok?
   end
 
+  def test_result_and_heatmap_pages_render_the_modal_close_glyph_correctly
+    get "/result", { uuid: "example" }
+    assert_includes last_response.body, "×"
+    refute_includes last_response.body, "&amp;times;"
+
+    get "/result/heatmap", { uuid: "example" }
+    assert_includes last_response.body, "×"
+    refute_includes last_response.body, "&amp;times;"
+  end
+
   def test_result_rejects_a_traversal_id
     get "/wpgsa/result", { uuid: "../../etc", type: "p-value", format: "tsv" }
     assert_equal 404, last_response.status
