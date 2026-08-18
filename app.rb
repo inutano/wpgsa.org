@@ -13,8 +13,11 @@ require 'lib/wpgsa'
 
 class WpgsaApp < Sinatra::Base
   helpers do
+    ALLOWED_FORWARDED_SCHEMES = %w[http https].freeze
+
     def app_root
-      scheme = env["HTTP_X_FORWARDED_PROTO"] || env["rack.url_scheme"]
+      forwarded = env["HTTP_X_FORWARDED_PROTO"]
+      scheme = ALLOWED_FORWARDED_SCHEMES.include?(forwarded) ? forwarded : env["rack.url_scheme"]
       "#{scheme}://#{env["HTTP_HOST"]}#{env["SCRIPT_NAME"]}"
     end
   end

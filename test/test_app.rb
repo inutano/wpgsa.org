@@ -21,6 +21,12 @@ class TestApp < Minitest::Test
     refute_includes last_response.body, "http://wpgsa.org/css/"
   end
 
+  def test_index_ignores_a_malformed_forwarded_proto_header
+    get "/", {}, { "HTTP_X_FORWARDED_PROTO" => "https, http", "HTTP_HOST" => "wpgsa.org" }
+    refute_includes last_response.body, "https, http://"
+    assert_includes last_response.body, "http://wpgsa.org/css/wpgsa.css"
+  end
+
   def test_download_renders
     get "/download"
     assert last_response.ok?
