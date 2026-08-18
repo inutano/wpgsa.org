@@ -19,7 +19,7 @@ module WPGSA
     end
 
     def result_file_path
-      case @type
+      path = case @type
       when "p-value"
         p_value
       when "q-value"
@@ -31,6 +31,8 @@ module WPGSA
       when "network"
         network_data
       end
+      raise Errno::ENOENT, @data_dir if path.nil?
+      path
     end
 
     def p_value

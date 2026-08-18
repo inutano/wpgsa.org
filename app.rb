@@ -20,7 +20,7 @@ class WpgsaApp < Sinatra::Base
   end
 
   configure do
-    set :config, YAML.load_file("./config.yaml")
+    set :config, YAML.load_file(File.expand_path("config.yaml", __dir__))
   end
 
   get "/" do
@@ -42,18 +42,23 @@ class WpgsaApp < Sinatra::Base
   end
 
   post "/wpgsa/result" do
-    if params[:file]
-      workdir = settings.config["workdir"]
-      network_file_path = settings.config["network_file_path"]
-      job = WPGSA::Job.create(params[:file], workdir, network_file_path)
-      job.spawn!
-      content_type "application/json"
-      status 202
-      JSON.dump({
-        "uuid" => job.uuid,
-        "status" => "queued"
-      })
+    content_type "application/json"
+
+    if !params[:file]
+      status 400
+      return JSON.dump({ "error_message" => "No file was uploaded" })
     end
+
+    workdir = settings.config["workdir"]
+    network_file_path = settings.config["network_file_path"]
+    job = WPGSA::Job.create(params[:file], workdir, network_file_path)
+    job.spawn!
+
+    status 202
+    JSON.dump({
+      "uuid" => job.uuid,
+      "status" => "queued"
+    })
   end
 
   get "/wpgsa/job" do
@@ -82,7 +87,7 @@ class WpgsaApp < Sinatra::Base
       content_type "application/json"
       result.to_json
     end
-  rescue WPGSA::InvalidDataId
+  rescue WPGSA::InvalidDataId, Errno::ENOENT
     status 404
     content_type "application/json"
     JSON.dump({ "error_message" => "Not found" })
