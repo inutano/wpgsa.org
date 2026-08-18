@@ -3,6 +3,7 @@ require 'json'
 module WPGSA
   class Result
     def initialize(uuid, type)
+      WPGSA.validate_data_id!(uuid)
       @uuid = uuid
       @type = type
       @data_dir = File.join(__dir__, "../../public/data", @uuid)

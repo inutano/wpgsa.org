@@ -60,7 +60,7 @@ class WpgsaApp < Sinatra::Base
     content_type "application/json"
     job = WPGSA::Job.load(params[:uuid])
     JSON.dump(job.metadata)
-  rescue Errno::ENOENT, JSON::ParserError
+  rescue WPGSA::InvalidDataId, Errno::ENOENT, JSON::ParserError
     status 404
     JSON.dump({
       "uuid" => params[:uuid],
@@ -82,6 +82,10 @@ class WpgsaApp < Sinatra::Base
       content_type "application/json"
       result.to_json
     end
+  rescue WPGSA::InvalidDataId
+    status 404
+    content_type "application/json"
+    JSON.dump({ "error_message" => "Not found" })
   end
 
   not_found do
