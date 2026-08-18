@@ -55,9 +55,17 @@ module WPGSA
       glob("hclust.js")
     end
 
+    # job.json and job.log are written into this same directory (see
+    # lib/wpgsa/job.rb) but are job bookkeeping, not the uploaded input
+    # file. Both sort ahead of a typical input filename, so without this
+    # exclusion the result page would report "job.json" as the uploaded
+    # filename for every real job.
+    NON_INPUT_BASENAMES = ["job.json", "job.log"].freeze
+
     def input_data
       fpath = Dir.glob(@data_dir+"/*").select do |f|
-        f != p_value && f != q_value && f != t_score && f != network_data && f != hclust
+        f != p_value && f != q_value && f != t_score && f != network_data && f != hclust &&
+          !NON_INPUT_BASENAMES.include?(File.basename(f))
       end
       fpath[0]
     end
