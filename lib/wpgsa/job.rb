@@ -72,27 +72,29 @@ module WPGSA
       pid
     end
 
-    def run!
-      write_metadata(
-        "status" => "running",
-        "started_at" => timestamp,
-        "error_message" => nil
-      )
+    def run!(concurrency: 2)
+      WPGSA::Slot.acquire(concurrency) do
+        write_metadata(
+          "status" => "running",
+          "started_at" => timestamp,
+          "error_message" => nil
+        )
 
-      docker = WPGSA::Docker.from_job(
-        @uuid,
-        @workdir,
-        @data_dir,
-        @input_filename,
-        @network_file
-      )
+        docker = WPGSA::Docker.from_job(
+          @uuid,
+          @workdir,
+          @data_dir,
+          @input_filename,
+          @network_file
+        )
 
-      result_paths = docker.run_analysis
-      write_metadata(
-        "status" => "finished",
-        "finished_at" => timestamp,
-        "result_paths" => result_paths
-      )
+        result_paths = docker.run_analysis
+        write_metadata(
+          "status" => "finished",
+          "finished_at" => timestamp,
+          "result_paths" => result_paths
+        )
+      end
     rescue StandardError => e
       write_metadata(
         "status" => "failed",

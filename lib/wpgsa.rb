@@ -1,6 +1,7 @@
 require 'wpgsa/docker'
 require 'wpgsa/job'
 require 'wpgsa/result'
+require 'wpgsa/slot'
 
 module WPGSA
   class InvalidDataId < StandardError; end

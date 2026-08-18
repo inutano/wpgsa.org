@@ -1,2 +1,3 @@
 workdir: "/tmp"
 network_file_path: "/path/to/merged_mouse_v7_160212.network" # rake wpgsa:init will rewrite this
+max_concurrent_jobs: 2
