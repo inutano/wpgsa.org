@@ -1,8 +1,27 @@
 #!/usr/bin/env ruby
 
 require "fileutils"
+require "json"
 
 KEEP = ["example"].freeze
+TERMINAL_STATUSES = ["finished", "failed"].freeze
+
+# A directory whose job.json reports a non-terminal status (queued, running)
+# is a job still in flight and must survive regardless of age. A directory
+# with no job.json, or with unreadable/corrupt JSON, or with no "status"
+# field, is not known to be in progress and remains eligible for age-based
+# removal -- otherwise a malformed or partial file would pin the directory
+# forever, reintroducing the unbounded-growth problem this script exists to
+# fix.
+def in_progress?(path)
+  metadata = JSON.parse(File.read(File.join(path, "job.json")))
+  status = metadata["status"]
+  return false if status.nil?
+
+  !TERMINAL_STATUSES.include?(status)
+rescue Errno::ENOENT, JSON::ParserError
+  false
+end
 
 data_dir = ENV["WPGSA_DATA_DIR"] || File.expand_path("../public/data", __dir__)
 workdir  = ENV["WPGSA_WORKDIR"]  || "/tmp/wpgsa"
@@ -10,8 +29,12 @@ days     = Integer(ENV["WPGSA_RETENTION_DAYS"] || "30")
 
 cutoff = Time.now - days * 86_400
 removed = 0
+failures = []
 
-[data_dir, workdir].each do |root|
+# The work directory has no job.json and no notion of job status, so it is
+# always swept purely on age. The data directory additionally skips any
+# directory that looks like a job still in progress.
+[[data_dir, true], [workdir, false]].each do |root, check_status|
   next unless File.directory?(root)
 
   Dir.children(root).each do |name|
@@ -20,10 +43,21 @@ removed = 0
     path = File.join(root, name)
     next unless File.directory?(path)
     next if File.mtime(path) > cutoff
+    next if check_status && in_progress?(path)
 
     FileUtils.rm_rf(path)
-    removed += 1
+
+    if File.exist?(path)
+      failures << path
+    else
+      removed += 1
+    end
   end
 end
 
 puts "removed #{removed} job director#{removed == 1 ? "y" : "ies"} older than #{days} days"
+
+unless failures.empty?
+  warn "failed to remove #{failures.size} director#{failures.size == 1 ? "y" : "ies"}: #{failures.join(", ")}"
+  exit 1
+end
