@@ -218,6 +218,15 @@ ExecStart=/usr/bin/env bundle exec puma -C $APP_DIR/config/puma.rb
 ExecReload=/bin/kill -USR2 \$MAINPID
 Restart=always
 RestartSec=5
+# lib/wpgsa/job.rb#spawn! detaches an analysis runner as a child of this
+# Puma process, so it lives inside this unit's cgroup. The default
+# KillMode (control-group) makes systemd kill every process in that
+# cgroup on stop/restart -- so deploying an unrelated fix with
+# `systemctl restart wpgsa` also kills any in-flight analysis, leaving
+# job.json stuck at "running" with a dead pid forever. Do not remove
+# this: KillMode=process signals only the main (Puma) process and lets
+# detached runners finish undisturbed.
+KillMode=process
 StandardOutput=journal
 StandardError=journal
 
