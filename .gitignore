@@ -39,7 +39,8 @@ build/
 
 
 .sass-cache
-public/data
+public/data/*
+!public/data/example/
 
 # subagent-driven-development workspace (scratch)
 .superpowers/
