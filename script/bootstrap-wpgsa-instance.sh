@@ -112,7 +112,29 @@ configure_swap() {
 
 install_bundler() {
   log "installing bundler"
-  gem install bundler -N
+
+  # AL2023's ruby3.x RPMs ship only versioned binaries (ruby3.4-gem, etc).
+  # The alternatives system links `ruby` alone -- it never creates a bare
+  # `gem` link -- so a plain `gem install` fails with "command not found"
+  # even though the version check in install_packages already passed.
+  local gem_bin=""
+  if [ -n "$RUBY_PKG" ] && [ -x "/usr/bin/${RUBY_PKG}-gem" ]; then
+    gem_bin="/usr/bin/${RUBY_PKG}-gem"
+  elif command -v gem >/dev/null 2>&1; then
+    gem_bin="$(command -v gem)"
+  else
+    log "no gem executable found (looked for /usr/bin/${RUBY_PKG}-gem and a bare 'gem' on PATH)"
+    exit 1
+  fi
+  log "using gem binary: $gem_bin"
+
+  "$gem_bin" install bundler -N
+
+  if ! command -v bundle >/dev/null 2>&1; then
+    log "bundle is not on PATH after installing bundler via $gem_bin; bundle_install will fail"
+    exit 1
+  fi
+  log "bundler $(bundle --version) installed; bundle resolved to $(command -v bundle)"
 }
 
 checkout_app() {
