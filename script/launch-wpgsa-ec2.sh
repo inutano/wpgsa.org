@@ -12,14 +12,14 @@ AMI_PARAM="${AMI_PARAM:-al2023-ami-kernel-default-${ARCH}}"
 KEY_NAME="${KEY_NAME:-}"
 DOMAIN_NAME="${DOMAIN_NAME:-wpgsa.org}"
 HOSTNAME_TAG="${HOSTNAME_TAG:-wpgsa-org}"
-APP_BRANCH="${APP_BRANCH:-master}"
+APP_BRANCH="${APP_BRANCH:-stage1-rebuild}"
 APP_REPO="${APP_REPO:-https://github.com/inutano/wpgsa.org.git}"
 EIP_ALLOCATION_ID="${EIP_ALLOCATION_ID:-}"
 SUBNET_ID="${SUBNET_ID:-}"
 VPC_ID="${VPC_ID:-}"
 SECURITY_GROUP_ID="${SECURITY_GROUP_ID:-}"
 SECURITY_GROUP_NAME="${SECURITY_GROUP_NAME:-wpgsa-web}"
-SSH_CIDR="${SSH_CIDR:-0.0.0.0/0}"
+SSH_CIDR="${SSH_CIDR:-}"
 ROOT_VOLUME_SIZE="${ROOT_VOLUME_SIZE:-30}"
 INSTANCE_PROFILE_NAME="${INSTANCE_PROFILE_NAME:-}"
 LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
@@ -133,7 +133,8 @@ launch_instance() {
     --security-group-ids "$sg_id"
     --key-name "$KEY_NAME"
     --associate-public-ip-address
-    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":${ROOT_VOLUME_SIZE},\"VolumeType\":\"gp3\",\"DeleteOnTermination\":true}}]"
+    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":${ROOT_VOLUME_SIZE},\"VolumeType\":\"gp3\",\"Encrypted\":true,\"DeleteOnTermination\":true}}]"
+    --metadata-options "HttpTokens=required,HttpEndpoint=enabled"
     --tag-specifications "$TAG_SPEC"
     --user-data "file://${user_data_file}"
   )
@@ -212,6 +213,8 @@ EOF
 main() {
   need_cmd aws
   require_env KEY_NAME
+  require_env SSH_CIDR
+  [ "$SSH_CIDR" != "0.0.0.0/0" ] || die "refusing to open SSH to the whole internet; set SSH_CIDR"
   [ -f "$BOOTSTRAP_SCRIPT" ] || die "bootstrap script not found: $BOOTSTRAP_SCRIPT"
   ensure_aws_auth
 
