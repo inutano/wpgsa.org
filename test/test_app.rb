@@ -47,6 +47,31 @@ class TestApp < Minitest::Test
     assert_equal 404, last_response.status
   end
 
+  def test_result_page_rejects_an_invalid_uuid
+    get "/result", { uuid: "example/../../etc/passwd" }
+    assert_equal 404, last_response.status
+  end
+
+  def test_heatmap_page_rejects_an_invalid_uuid
+    get "/result/heatmap", { uuid: "example/evil.js?" }
+    assert_equal 404, last_response.status
+  end
+
+  def test_heatmap_page_does_not_point_the_script_tag_at_an_arbitrary_path
+    get "/result/heatmap", { uuid: "example/evil.js?" }
+    refute_includes last_response.body, "evil.js"
+  end
+
+  def test_result_page_renders_for_a_valid_uuid
+    get "/result", { uuid: "example" }
+    assert last_response.ok?
+  end
+
+  def test_heatmap_page_renders_for_a_valid_uuid
+    get "/result/heatmap", { uuid: "example" }
+    assert last_response.ok?
+  end
+
   def test_result_rejects_a_traversal_id
     get "/wpgsa/result", { uuid: "../../etc", type: "p-value", format: "tsv" }
     assert_equal 404, last_response.status
