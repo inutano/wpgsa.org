@@ -116,14 +116,28 @@ module WPGSA
       end
     end
 
+    # publish_result copies the job's workdir into the web-served
+    # public/data/<uuid>/ directory. The reference network file was copied
+    # into the workdir by staging_network_file purely so the container
+    # could read it as a server-side input; it is not a result and has no
+    # business being duplicated into every job's published output (it is
+    # ~67MB, and at even modest traffic that roughly doubles the disk this
+    # branch retains per job -- see run_analysis below for the other half
+    # of the fix).
     def publish_result
-      FileUtils.cp_r(Dir.glob("#{@workdir}/*"), @datadir)
+      published = Dir.glob("#{@workdir}/*").reject { |path| File.basename(path) == @network_file }
+      FileUtils.cp_r(published, @datadir)
     end
 
     def run_analysis
       run_wpgsa
       run_hclust
       publish_result
+      # The workdir (input file + network file copy) has now been
+      # superseded by the published result directory; keep it around no
+      # longer than the analysis itself needs it, rather than retaining it
+      # until the retention sweep's next run.
+      FileUtils.rm_rf(@workdir)
       result_paths
     end
 

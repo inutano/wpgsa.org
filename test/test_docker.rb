@@ -80,7 +80,7 @@ end
 # Integration-level test for Docker.new / staging / publish_result. This
 # exercises real filesystem side effects (Docker#init_datadir hardcodes
 # public/data/<uuid>), so it cleans up the directories it creates.
-class TestDockerStagingHostileFilename < Minitest::Test
+class TestDockerStagingAndPublishing < Minitest::Test
   def uploaded_file(filename, body = "a\tb\tc\n")
     { filename: filename, tempfile: StringIO.new(body) }
   end
@@ -115,6 +115,52 @@ class TestDockerStagingHostileFilename < Minitest::Test
           published = Dir.children(docker.datadir)
           refute_includes published, "evil.js"
           assert_includes published, docker.input_data
+        ensure
+          cleanup(docker)
+        end
+      end
+    end
+  end
+
+  # Finding 8: the network file copy in the workdir is a server-side input,
+  # not a result, and must not be duplicated into the published directory.
+  def test_publish_result_excludes_the_network_file_copy
+    with_network_file do |network_file_path|
+      Dir.mktmpdir do |workdir_root|
+        docker = WPGSA::Docker.new(uploaded_file("sample.txt"), workdir_root, network_file_path)
+        begin
+          File.write(File.join(docker.workdir, "p_value.txt"), "result\n")
+
+          docker.publish_result
+
+          published = Dir.children(docker.datadir)
+          refute_includes published, docker.network_file, "the network file copy must not be published"
+          assert_includes published, "p_value.txt"
+          assert_includes published, docker.input_data
+        ensure
+          cleanup(docker)
+        end
+      end
+    end
+  end
+
+  # Finding 8: once results are published, the per-job workdir (input file
+  # + network file copy) must not be retained -- it doubles the disk held
+  # per job until the retention sweep runs.
+  def test_run_analysis_removes_the_workdir_after_publishing
+    with_network_file do |network_file_path|
+      Dir.mktmpdir do |workdir_root|
+        docker = WPGSA::Docker.new(uploaded_file("sample.txt"), workdir_root, network_file_path)
+        begin
+          def docker.run_wpgsa; end
+          def docker.run_hclust; end
+
+          workdir = docker.workdir
+          docker.run_analysis
+
+          refute File.exist?(workdir), "the job workdir must be removed once results are published"
+          assert File.directory?(docker.datadir)
+          assert_includes Dir.children(docker.datadir), docker.input_data
         ensure
           cleanup(docker)
         end
