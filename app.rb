@@ -50,19 +50,28 @@ class WpgsaApp < Sinatra::Base
     if params[:file]
       workdir = settings.config["workdir"]
       network_file_path = settings.config["network_file_path"]
-      d = WPGSA::Docker.new(params[:file], workdir, network_file_path)
-      r = d.wpgsa_results
-      if r
-        content_type "application/json"
-        JSON.dump(r)
-      else
-        warn "wPGSA execution failed: #{Time.now}"
-        warn "  Filename: #{params[:file][:filename]}"
-        warn "  File: #{params[:file][:tempfile].read}"
-        warn "  Result JSON data: #{r}"
-        status 500
-      end
+      job = WPGSA::Job.create(params[:file], workdir, network_file_path)
+      job.spawn!
+      content_type "application/json"
+      status 202
+      JSON.dump({
+        "uuid" => job.uuid,
+        "status" => "queued"
+      })
     end
+  end
+
+  get "/wpgsa/job" do
+    content_type "application/json"
+    job = WPGSA::Job.load(params[:uuid])
+    JSON.dump(job.metadata)
+  rescue Errno::ENOENT, JSON::ParserError
+    status 404
+    JSON.dump({
+      "uuid" => params[:uuid],
+      "status" => "unknown",
+      "error_message" => "Job not found"
+    })
   end
 
   get "/wpgsa/result" do

@@ -3,6 +3,8 @@ require 'fileutils'
 
 module WPGSA
   class Docker
+    attr_reader :uuid, :workdir, :datadir, :input_data, :network_file
+
     def initialize(input_file, workdir, network_file_path) # file object from params[:file]
       @uuid = SecureRandom.uuid
 
@@ -11,6 +13,16 @@ module WPGSA
 
       @input_data = staging_input_data(input_file)
       @network_file = staging_network_file(network_file_path)
+    end
+
+    def self.from_job(uuid, workdir, datadir, input_data, network_file)
+      job = allocate
+      job.instance_variable_set(:@uuid, uuid)
+      job.instance_variable_set(:@workdir, workdir)
+      job.instance_variable_set(:@datadir, datadir)
+      job.instance_variable_set(:@input_data, input_data)
+      job.instance_variable_set(:@network_file, network_file)
+      job
     end
 
     def wpgsa_container_id
@@ -57,7 +69,10 @@ module WPGSA
     end
 
     def run_hclust
-      t_score = Dir.glob(@workdir+"/*t_score*").first.split("/").last
+      t_score_path = Dir.glob(@workdir+"/*t_score*").first
+      return if !t_score_path
+
+      t_score = t_score_path.split("/").last
       docker_cmd = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
       arguments  = "/data/#{t_score} > #{@workdir}/data.hclust.js"
       `#{docker_cmd} #{arguments}`
@@ -69,11 +84,19 @@ module WPGSA
       FileUtils.cp_r(Dir.glob("#{@workdir}/*"), @datadir)
     end
 
-    def wpgsa_results
+    def run_analysis
       run_wpgsa
       run_hclust
       publish_result
+      result_paths
+    end
+
+    def result_paths
       Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
+    end
+
+    def wpgsa_results
+      run_analysis
     rescue NameError
       warn "uuid: " + @uuid
       warn "working directory: " + @workdir

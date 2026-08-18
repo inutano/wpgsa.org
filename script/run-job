@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << File.expand_path("..", __dir__)
+$LOAD_PATH << File.expand_path("../lib", __dir__)
+
+require "lib/wpgsa"
+
+uuid = ARGV[0]
+abort("missing uuid") if !uuid || uuid.empty?
+
+job = WPGSA::Job.load(uuid)
+job.run!
