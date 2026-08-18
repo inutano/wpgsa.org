@@ -25,6 +25,18 @@ LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 ENABLE_TLS="${ENABLE_TLS:-false}"
 TAG_SPEC="ResourceType=instance,Tags=[{Key=Name,Value=${HOSTNAME_TAG}},{Key=Project,Value=wpgsa.org}]"
 
+USER_DATA_FILE=""
+
+cleanup() {
+  # USER_DATA_FILE is a script-scope variable, initialised empty above, so
+  # this is safe to run on every exit path -- including a die() before
+  # render_user_data has ever run -- without tripping `set -u`.
+  if [ -n "$USER_DATA_FILE" ]; then
+    rm -f "$USER_DATA_FILE"
+  fi
+}
+trap cleanup EXIT
+
 die() {
   printf 'error: %s\n' "$1" >&2
   exit 1
@@ -197,11 +209,10 @@ main() {
   fi
   [ "$SUBNET_ID" != "None" ] || die "could not resolve a SUBNET_ID; set SUBNET_ID explicitly"
 
-  local user_data_file instance_id
-  user_data_file="$(render_user_data)"
-  trap 'rm -f "$user_data_file"' EXIT
+  local instance_id
+  USER_DATA_FILE="$(render_user_data)"
 
-  instance_id="$(launch_instance "$SUBNET_ID" "$SECURITY_GROUP_ID" "$user_data_file")"
+  instance_id="$(launch_instance "$SUBNET_ID" "$SECURITY_GROUP_ID" "$USER_DATA_FILE")"
 
   aws ec2 wait instance-running --region "$REGION" --instance-ids "$instance_id"
   associate_eip "$instance_id"
