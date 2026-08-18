@@ -130,11 +130,12 @@ install_bundler() {
 
   "$gem_bin" install bundler -N
 
-  if ! command -v bundle >/dev/null 2>&1; then
-    log "bundle is not on PATH after installing bundler via $gem_bin; bundle_install will fail"
+  local bundle_path
+  bundle_path="$(su - "$APP_USER" -c 'command -v bundle')" || {
+    log "bundle is not available in $APP_USER's login shell; bundle_install will fail"
     exit 1
-  fi
-  log "bundler $(bundle --version) installed; bundle resolved to $(command -v bundle)"
+  }
+  log "bundler $(su - "$APP_USER" -c 'bundle --version') installed; bundle resolved to $bundle_path in $APP_USER's login shell"
 }
 
 checkout_app() {

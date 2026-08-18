@@ -35,7 +35,7 @@ cleanup() {
     rm -f "$USER_DATA_FILE"
   fi
 }
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 die() {
   printf 'error: %s\n' "$1" >&2
