@@ -1,6 +1,8 @@
 require_relative "test_helper"
 require "rack/test"
 require "app"
+require "fileutils"
+require "json"
 
 class TestApp < Minitest::Test
   include Rack::Test::Methods
@@ -95,5 +97,42 @@ class TestApp < Minitest::Test
   def test_result_for_a_missing_job_directory_is_a_404
     get "/wpgsa/result", { uuid: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", type: "p-value", format: "tsv" }
     assert_equal 404, last_response.status
+  end
+
+  # GET /wpgsa/job is what the browser polls while a job is in flight, so
+  # it has to reflect orphan correction (WPGSA::Job#metadata), not just
+  # the raw persisted status -- otherwise the browser would poll a
+  # "running" job that already died until it hits its own 30-minute
+  # timeout and shows a generic timeout instead of telling the user the
+  # analysis actually failed.
+  def test_job_status_reflects_an_orphaned_job_as_failed
+    uuid = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
+    data_dir = File.expand_path("../public/data/#{uuid}", __dir__)
+    FileUtils.mkdir_p(data_dir)
+
+    dead_pid = Process.spawn("true", out: File::NULL, err: File::NULL)
+    Process.wait(dead_pid)
+
+    File.write(File.join(data_dir, "job.json"), JSON.generate(
+                                                    "uuid" => uuid,
+                                                    "status" => "running",
+                                                    "pid" => dead_pid,
+                                                    "data_dir" => data_dir,
+                                                    "workdir" => "/tmp/wpgsa/#{uuid}",
+                                                    "input_filename" => "sample.txt",
+                                                    "network_file" => "net.network"
+                                                  ))
+
+    get "/wpgsa/job", { uuid: uuid }
+    body = JSON.parse(last_response.body)
+
+    assert last_response.ok?
+    assert_equal "failed", body["status"]
+    assert_match(/died before completing/i, body["error_message"])
+
+    persisted = JSON.parse(File.read(File.join(data_dir, "job.json")))
+    assert_equal "failed", persisted["status"]
+  ensure
+    FileUtils.rm_rf(data_dir)
   end
 end
