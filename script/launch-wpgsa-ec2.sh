@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP_SCRIPT="$SCRIPT_DIR/bootstrap-wpgsa-instance.sh"
 
-REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-ap-northeast-1}}"
 INSTANCE_TYPE="${INSTANCE_TYPE:-t3.small}"
 ARCH="${ARCH:-x86_64}"
 AMI_PARAM="${AMI_PARAM:-al2023-ami-kernel-default-${ARCH}}"
@@ -18,7 +18,6 @@ EIP_ALLOCATION_ID="${EIP_ALLOCATION_ID:-}"
 SUBNET_ID="${SUBNET_ID:-}"
 VPC_ID="${VPC_ID:-}"
 SECURITY_GROUP_ID="${SECURITY_GROUP_ID:-}"
-SECURITY_GROUP_NAME="${SECURITY_GROUP_NAME:-wpgsa-web}"
 SSH_CIDR="${SSH_CIDR:-}"
 ROOT_VOLUME_SIZE="${ROOT_VOLUME_SIZE:-30}"
 INSTANCE_PROFILE_NAME="${INSTANCE_PROFILE_NAME:-}"
@@ -58,37 +57,6 @@ default_subnet() {
     --filters Name=vpc-id,Values="$vpc_id" Name=default-for-az,Values=true \
     --query 'Subnets[0].SubnetId' \
     --output text
-}
-
-ensure_security_group() {
-  local vpc_id="$1"
-  local sg_id
-
-  sg_id="$(aws ec2 describe-security-groups \
-    --region "$REGION" \
-    --filters Name=vpc-id,Values="$vpc_id" Name=group-name,Values="$SECURITY_GROUP_NAME" \
-    --query 'SecurityGroups[0].GroupId' \
-    --output text)"
-
-  if [ "$sg_id" = "None" ] || [ -z "$sg_id" ]; then
-    sg_id="$(aws ec2 create-security-group \
-      --region "$REGION" \
-      --group-name "$SECURITY_GROUP_NAME" \
-      --description "wpgsa.org web access" \
-      --vpc-id "$vpc_id" \
-      --query 'GroupId' \
-      --output text)"
-
-    aws ec2 authorize-security-group-ingress \
-      --region "$REGION" \
-      --group-id "$sg_id" \
-      --ip-permissions \
-      "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${SSH_CIDR},Description=SSH}]" \
-      "IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges=[{CidrIp=0.0.0.0/0,Description=HTTP}]" \
-      "IpProtocol=tcp,FromPort=443,ToPort=443,IpRanges=[{CidrIp=0.0.0.0/0,Description=HTTPS}]"
-  fi
-
-  printf '%s\n' "$sg_id"
 }
 
 render_user_data() {
@@ -214,6 +182,7 @@ main() {
   need_cmd aws
   require_env KEY_NAME
   require_env SSH_CIDR
+  require_env SECURITY_GROUP_ID
   [ "$SSH_CIDR" != "0.0.0.0/0" ] || die "refusing to open SSH to the whole internet; set SSH_CIDR"
   [ -f "$BOOTSTRAP_SCRIPT" ] || die "bootstrap script not found: $BOOTSTRAP_SCRIPT"
   ensure_aws_auth
@@ -227,10 +196,6 @@ main() {
     SUBNET_ID="$(default_subnet "$VPC_ID")"
   fi
   [ "$SUBNET_ID" != "None" ] || die "could not resolve a SUBNET_ID; set SUBNET_ID explicitly"
-
-  if [ -z "$SECURITY_GROUP_ID" ]; then
-    SECURITY_GROUP_ID="$(ensure_security_group "$VPC_ID")"
-  fi
 
   local user_data_file instance_id
   user_data_file="$(render_user_data)"
