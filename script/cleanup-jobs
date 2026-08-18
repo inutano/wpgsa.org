@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+
+KEEP = ["example"].freeze
+
+data_dir = ENV["WPGSA_DATA_DIR"] || File.expand_path("../public/data", __dir__)
+workdir  = ENV["WPGSA_WORKDIR"]  || "/tmp/wpgsa"
+days     = Integer(ENV["WPGSA_RETENTION_DAYS"] || "30")
+
+cutoff = Time.now - days * 86_400
+removed = 0
+
+[data_dir, workdir].each do |root|
+  next unless File.directory?(root)
+
+  Dir.children(root).each do |name|
+    next if KEEP.include?(name)
+
+    path = File.join(root, name)
+    next unless File.directory?(path)
+    next if File.mtime(path) > cutoff
+
+    FileUtils.rm_rf(path)
+    removed += 1
+  end
+end
+
+puts "removed #{removed} job director#{removed == 1 ? "y" : "ies"} older than #{days} days"
