@@ -1,5 +1,6 @@
 require 'wpgsa/docker'
 require 'wpgsa/job'
+require 'wpgsa/log_filter'
 require 'wpgsa/result'
 require 'wpgsa/slot'
 
