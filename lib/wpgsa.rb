@@ -4,6 +4,7 @@ require 'wpgsa/result'
 
 module WPGSA
   class InvalidDataId < StandardError; end
+  class AnalysisFailed < StandardError; end
 
   UUID_PATTERN = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
   EXAMPLE_ID = "example".freeze

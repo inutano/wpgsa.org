@@ -59,25 +59,38 @@ module WPGSA
       network_file_path.split("/").last
     end
 
+    def wpgsa_command
+      [
+        "docker", "run", "--rm", "-i",
+        "-v", "#{@workdir}:/data",
+        wpgsa_container_id, "wpgsa",
+        "--logfc-file", "/data/#{@input_data}",
+        "--network-file", "/data/#{@network_file}"
+      ]
+    end
+
+    def hclust_command(t_score)
+      [
+        "docker", "run", "--rm", "-i",
+        "-v", "#{@workdir}:/data",
+        wpgsa_container_id, "hclust",
+        "/data/#{t_score}"
+      ]
+    end
+
     def run_wpgsa
-      docker_cmd       = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} wpgsa"
-      input_argument   = "--logfc-file \"/data/#{@input_data}\""
-      network_argument = "--network-file \"/data/#{@network_file}\""
-      cmd = [docker_cmd, input_argument, network_argument].join("\s")
-      `#{cmd}`
-      raise NameError if $? != 0
+      raise AnalysisFailed, "wpgsa container exited non-zero" unless system(*wpgsa_command)
     end
 
     def run_hclust
-      t_score_path = Dir.glob(@workdir+"/*t_score*").first
+      t_score_path = Dir.glob(File.join(@workdir, "*t_score*")).first
       return if !t_score_path
 
-      t_score = t_score_path.split("/").last
-      docker_cmd = "docker run --rm -i -v #{@workdir}:/data #{wpgsa_container_id} hclust"
-      arguments  = "/data/#{t_score} > #{@workdir}/data.hclust.js"
-      `#{docker_cmd} #{arguments}`
-      # 1 column data (expression data of 1 sample) will not have clustering data, escape
-      # raise NameError if $? != 0
+      # 1 サンプルのみの入力ではクラスタリング結果が出ないため、
+      # 失敗しても解析全体は成功として扱う
+      File.open(File.join(@workdir, "data.hclust.js"), "w") do |out|
+        system(*hclust_command(File.basename(t_score_path)), out: out)
+      end
     end
 
     def publish_result
@@ -93,21 +106,6 @@ module WPGSA
 
     def result_paths
       Dir.glob("#{@datadir}/*").map{|path| path.sub(/^.+\/public\//,"") }
-    end
-
-    def wpgsa_results
-      run_analysis
-    rescue NameError
-      warn "uuid: " + @uuid
-      warn "working directory: " + @workdir
-      warn "data directory: " + @datadir
-      warn "input data: " + @input_data
-      warn "network file: " + @network_file
-      nil
-    end
-
-    def dry_run
-      Dir.glob("#{File.join(__dir__, "../../public/data", "d5767493-4b86-4297-8b8f-d650f413d952")}/*").map{|path| path.sub(/^.+\/public\//,"") }
     end
   end
 end
