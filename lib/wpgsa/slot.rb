@@ -8,6 +8,8 @@ module WPGSA
     DEFAULT_DIR = File.join(__dir__, "../../tmp/slots").freeze
 
     def self.acquire(limit, dir: DEFAULT_DIR, poll: 5)
+      raise ArgumentError, "limit must be >= 1, got #{limit}" if limit < 1
+
       FileUtils.mkdir_p(dir)
 
       loop do

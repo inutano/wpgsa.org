@@ -1,6 +1,7 @@
 require_relative "test_helper"
 require "lib/wpgsa"
 require "tmpdir"
+require "timeout"
 
 class TestSlot < Minitest::Test
   def test_runs_the_block_and_returns_its_value
@@ -43,7 +44,12 @@ class TestSlot < Minitest::Test
         end
       end
 
-      held.pop
+      begin
+        Timeout.timeout(5) { held.pop }
+      rescue Timeout::Error
+        flunk "holder thread never signaled that it entered the slot"
+      end
+
       waiter = Thread.new do
         WPGSA::Slot.acquire(1, dir: dir, poll: 0.05) { entered_second = true }
       end
@@ -55,6 +61,14 @@ class TestSlot < Minitest::Test
       holder.join
       waiter.join(5)
       assert entered_second, "second caller never entered after release"
+    end
+  end
+
+  def test_raises_for_a_non_positive_limit
+    Dir.mktmpdir do |dir|
+      assert_raises(ArgumentError) do
+        WPGSA::Slot.acquire(0, dir: dir) { :never }
+      end
     end
   end
 end
