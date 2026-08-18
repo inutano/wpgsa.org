@@ -113,9 +113,19 @@ module WPGSA
       current = metadata_base.merge(metadata)
       updated = current.merge(attrs)
       FileUtils.mkdir_p(@data_dir)
-      File.open(metadata_path, "w") do |f|
+
+      # The Puma worker, the runner, and script/cleanup-jobs all read
+      # job.json concurrently. Writing in place (truncate then write) leaves
+      # a window where a reader sees a truncated/empty file. Write to a
+      # temp file in the same directory and rename onto the target instead:
+      # rename is atomic within a directory, so readers only ever see the
+      # old complete file or the new complete file, never a partial one.
+      tmp_path = "#{metadata_path}.tmp.#{Process.pid}.#{object_id}"
+      File.open(tmp_path, "w") do |f|
         f.write(JSON.pretty_generate(updated))
       end
+      File.rename(tmp_path, metadata_path)
+
       updated
     end
 
