@@ -105,12 +105,20 @@ install_bundler() {
 checkout_app() {
   log "checking out app code"
   mkdir -p "$APP_DIR"
+  chown "$APP_USER":"$APP_GROUP" "$APP_DIR"
+
   if [ ! -d "$APP_DIR/.git" ]; then
-    git clone "$APP_REPO" "$APP_DIR"
+    su - "$APP_USER" -c "git clone '$APP_REPO' '$APP_DIR'"
   fi
-  git -C "$APP_DIR" fetch --all --tags
-  git -C "$APP_DIR" checkout "$APP_BRANCH"
-  git -C "$APP_DIR" pull --ff-only origin "$APP_BRANCH"
+
+  # Run every git operation as the app user, and chown the checkout to the
+  # app user before touching it. checkout_app must be idempotent -- a
+  # second bootstrap run against a repo already chowned to $APP_USER would
+  # otherwise be operated on as root, which git refuses ("detected dubious
+  # ownership") and aborts the whole script under set -e.
+  su - "$APP_USER" -c "git -C '$APP_DIR' fetch --all --tags"
+  su - "$APP_USER" -c "git -C '$APP_DIR' checkout '$APP_BRANCH'"
+  su - "$APP_USER" -c "git -C '$APP_DIR' pull --ff-only origin '$APP_BRANCH'"
   chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
 }
 
@@ -139,9 +147,14 @@ EOF
 
 bundle_install() {
   log "installing Ruby gems"
+  # frozen true forbids Bundler from re-resolving Gemfile.lock. Without it,
+  # an unfrozen install on a different Ruby/Bundler than the lockfile was
+  # resolved on can silently drift to different gem versions, and leaves
+  # the checkout dirty, which breaks a later `git pull --ff-only`.
   su - "$APP_USER" -c "cd '$APP_DIR' && \
     bundle config set --local path vendor/bundle && \
     bundle config set --local without 'test' && \
+    bundle config set --local frozen true && \
     bundle install"
 
   log "verifying bundle is satisfied"
