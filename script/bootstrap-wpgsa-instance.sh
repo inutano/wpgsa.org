@@ -33,6 +33,19 @@ retry() {
   done
 }
 
+version_ge() {
+  # True if dotted numeric version $1 >= $2 (e.g. "3.2.7" >= "3.1.21").
+  [ "$1" = "$2" ] && return 0
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n1)" = "$1" ]
+}
+
+dependency_version() {
+  local gem="$1"
+  su - "$APP_USER" -c "cd '$APP_DIR' && bundle list" 2>/dev/null \
+    | grep -E "^[[:space:]]*\* ${gem} \(" \
+    | sed -E 's/.*\(([0-9.]+)\).*/\1/'
+}
+
 RUBY_PKG="${RUBY_PKG:-}"
 
 detect_ruby_package() {
@@ -380,6 +393,29 @@ verify() {
   code="$(curl "${curl_opts[@]}" -H "Host: $DOMAIN_NAME" -o /dev/null -w '%{http_code}' 'http://127.0.0.1/' || echo 000)"
   log "GET / with Host: ${DOMAIN_NAME} -> ${code}"
   [ "$code" = "200" ] || failed=1
+
+  # Belt and braces on top of `bundle config set --local frozen true` in
+  # bundle_install: `bundle check` only asserts that the installed gems
+  # satisfy the lockfile, not that the lockfile's versions clear the
+  # security floors this branch exists to establish. The lockfile was
+  # resolved on a Ruby/Bundler newer than AL2023 ships; assert the actual
+  # installed versions directly so a silent re-resolution to older gems
+  # fails the bootstrap instead of shipping quietly.
+  local dep gem_name floor version
+  for dep in "rack 3.1.21" "rack-session 2.1.2" "sinatra 4.2.0"; do
+    gem_name="${dep% *}"
+    floor="${dep#* }"
+    version="$(dependency_version "$gem_name")"
+    if [ -z "$version" ]; then
+      log "could not determine installed version of ${gem_name}"
+      failed=1
+    elif version_ge "$version" "$floor"; then
+      log "${gem_name} ${version} satisfies floor ${floor}"
+    else
+      log "${gem_name} ${version} is BELOW the required floor ${floor}"
+      failed=1
+    fi
+  done
 
   if [ "$failed" -ne 0 ]; then
     log "verification FAILED"
