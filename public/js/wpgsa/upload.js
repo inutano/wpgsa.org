@@ -87,7 +87,18 @@ function uploadExpressionData(){
   });
 }
 
-function pollJobStatus(uuid, button){
+// Wall-clock cap on how long the client will keep polling a job that never
+// reaches a terminal status. Analyses normally take minutes; 30 minutes
+// gives ample headroom while still guaranteeing the user is not left on a
+// spinner forever if the runner dies without writing a terminal status (see
+// lib/wpgsa/job.rb and script/run-job for the ways that can happen).
+var POLL_TIMEOUT_MS = 30 * 60 * 1000;
+
+function pollJobStatus(uuid, button, deadline){
+  if (deadline === undefined) {
+    deadline = Date.now() + POLL_TIMEOUT_MS;
+  }
+
   UserJob.status(uuid).done(function(job){
     switch(job.status) {
     case "finished":
@@ -105,17 +116,31 @@ function pollJobStatus(uuid, button){
       alert(msg);
       break;
     default:
+      if (Date.now() >= deadline) {
+        pollTimedOut(uuid, button);
+        break;
+      }
       startLoading("Data uploaded, analysis in progress. This may take a while..");
       setTimeout(function(){
-        pollJobStatus(uuid, button);
+        pollJobStatus(uuid, button, deadline);
       }, 3000);
       break;
     }
   }).fail(function(){
+    if (Date.now() >= deadline) {
+      pollTimedOut(uuid, button);
+      return;
+    }
     setTimeout(function(){
-      pollJobStatus(uuid, button);
+      pollJobStatus(uuid, button, deadline);
     }, 3000);
   });
+}
+
+function pollTimedOut(uuid, button){
+  removeLoading();
+  button.prop("disabled", false);
+  alert("The analysis did not complete within 30 minutes.\n\nJob ID: " + uuid + "\n\nPlease report this issue and include the job ID above.");
 }
 
 function startLoading(msg){
