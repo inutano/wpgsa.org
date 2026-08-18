@@ -249,6 +249,15 @@ EOF
   chmod o+x "$APP_DIR"
   chmod -R o+rX "$APP_DIR/public"
 
+  # nginx runs as its own system user; it needs write access to the Puma
+  # unix socket (config/puma.rb creates it at mode 0660 via ?umask=0117)
+  # and execute access on every directory between $APP_DIR and the socket
+  # to traverse into it. Group membership must be granted before nginx is
+  # (re)started below, because it only takes effect for a freshly started
+  # process, not one already running.
+  usermod -aG "$APP_GROUP" nginx
+  chmod g+rx "$APP_DIR" "$APP_DIR/tmp" "$APP_DIR/tmp/sockets"
+
   rm -f /etc/nginx/conf.d/default.conf
   nginx -t
   systemctl enable nginx
@@ -287,9 +296,12 @@ configure_cloudwatch_agent() {
 }
 EOF
 
-  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  if ! /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a fetch-config -m ec2 -s \
-    -c file:/opt/aws/amazon-cloudwatch-agent/etc/wpgsa-metrics.json
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/wpgsa-metrics.json; then
+    log "CloudWatch agent config apply failed; continuing without it"
+    return 0
+  fi
 }
 
 enable_tls_if_requested() {
@@ -327,6 +339,7 @@ show_status() {
 verify() {
   log "verifying local endpoints"
   local failed=0
+  local curl_opts=(-s --connect-timeout 5 --max-time 10)
 
   systemctl is-active --quiet wpgsa || { log "wpgsa.service is not active"; failed=1; }
   systemctl is-active --quiet nginx  || { log "nginx is not active"; failed=1; }
@@ -334,13 +347,22 @@ verify() {
 
   local code
   for path in / /download "/result?uuid=example"; do
-    code="$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1${path}" || echo 000)"
+    code="$(curl "${curl_opts[@]}" -o /dev/null -w '%{http_code}' "http://127.0.0.1${path}" || echo 000)"
     log "GET ${path} -> ${code}"
     [ "$code" = "200" ] || failed=1
   done
 
-  code="$(curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1/wpgsa/result?uuid=example&type=t-score&format=filepath' || echo 000)"
+  code="$(curl "${curl_opts[@]}" -o /dev/null -w '%{http_code}' 'http://127.0.0.1/wpgsa/result?uuid=example&type=t-score&format=filepath' || echo 000)"
   log "GET /wpgsa/result (example t-score) -> ${code}"
+  [ "$code" = "200" ] || failed=1
+
+  # The checks above send Host: 127.0.0.1, which Sinatra's development-mode
+  # permitted_hosts already allows -- they would pass even if
+  # RACK_ENV=production were missing or misspelled in the systemd unit.
+  # Send the production vhost's Host header explicitly so this actually
+  # exercises host_authorization the way the ALB will.
+  code="$(curl "${curl_opts[@]}" -H "Host: $DOMAIN_NAME" -o /dev/null -w '%{http_code}' 'http://127.0.0.1/' || echo 000)"
+  log "GET / with Host: ${DOMAIN_NAME} -> ${code}"
   [ "$code" = "200" ] || failed=1
 
   if [ "$failed" -ne 0 ]; then
@@ -358,11 +380,11 @@ main() {
   checkout_app
   configure_app
   bundle_install
+  pull_algorithm_image
   configure_systemd
   configure_cleanup_timer
   configure_nginx
   configure_cloudwatch_agent
-  pull_algorithm_image
   show_status
   verify
   log "bootstrap finished"

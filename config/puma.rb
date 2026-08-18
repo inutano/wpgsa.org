@@ -9,7 +9,7 @@ threads threads_count, threads_count
 workers Integer(ENV.fetch("PUMA_WORKERS", "2"))
 preload_app!
 
-bind ENV.fetch("PUMA_BIND", "unix://#{app_root}/tmp/sockets/puma.sock")
+bind ENV.fetch("PUMA_BIND", "unix://#{app_root}/tmp/sockets/puma.sock?umask=0117")
 
 pidfile "#{app_root}/tmp/pids/puma.pid"
 state_path "#{app_root}/tmp/pids/puma.state"
