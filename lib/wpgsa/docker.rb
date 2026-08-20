@@ -37,7 +37,7 @@ module WPGSA
     end
 
     def init_datadir
-      datadir = File.join(__dir__, "../../public/data", @uuid)
+      datadir = WPGSA.data_dir(@uuid)
       FileUtils.mkdir_p(datadir)
       datadir
     end

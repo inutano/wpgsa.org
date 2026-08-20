@@ -37,8 +37,7 @@ module WPGSA
     end
 
     def self.load(uuid)
-      WPGSA.validate_data_id!(uuid)
-      data_dir = File.join(__dir__, "../../public/data", uuid)
+      data_dir = WPGSA.data_dir(uuid)
       metadata = JSON.parse(File.read(File.join(data_dir, "job.json")))
       new(
         metadata["uuid"],
