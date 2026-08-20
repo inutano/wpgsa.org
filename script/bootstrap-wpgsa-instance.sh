@@ -5,7 +5,7 @@ set -euo pipefail
 APP_DIR="${APP_DIR:-/opt/wpgsa.org}"
 APP_USER="${APP_USER:-wpgsa}"
 APP_GROUP="${APP_GROUP:-wpgsa}"
-APP_BRANCH="${APP_BRANCH:-stage1-rebuild}"  # TEMP: revert to master before merging this branch
+APP_BRANCH="${APP_BRANCH:-master}"
 APP_REPO="${APP_REPO:-https://github.com/inutano/wpgsa.org.git}"
 DOMAIN_NAME="${DOMAIN_NAME:-wpgsa.org}"
 APP_PORT="${APP_PORT:-9292}"
