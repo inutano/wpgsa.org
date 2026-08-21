@@ -23,6 +23,13 @@ class TestApp < Minitest::Test
     refute_includes last_response.body, "http://wpgsa.org/css/"
   end
 
+  def test_index_uses_the_forwarded_scheme_for_the_favicon
+    get "/", {}, { "HTTP_X_FORWARDED_PROTO" => "https", "HTTP_HOST" => "wpgsa.org" }
+    assert_includes last_response.body, "https://wpgsa.org/favicon.svg"
+    assert_includes last_response.body, "https://wpgsa.org/favicon.ico"
+    refute_includes last_response.body, "http://wpgsa.org/favicon"
+  end
+
   def test_index_ignores_a_malformed_forwarded_proto_header
     get "/", {}, { "HTTP_X_FORWARDED_PROTO" => "https, http", "HTTP_HOST" => "wpgsa.org" }
     refute_includes last_response.body, "https, http://"
