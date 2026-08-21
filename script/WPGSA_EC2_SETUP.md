@@ -17,7 +17,7 @@ Files:
 - app checkout from `https://github.com/inutano/wpgsa.org.git`
 - branch `master`
 - `systemd` service named `wpgsa`
-- app config pointing at `data/merged_mouse_150904_trim.network`
+- app config pointing at the reference network named in `config.yaml`
 - Docker image pull for `inutano/wpgsa:0.5.2`
 
 ## Assumptions
