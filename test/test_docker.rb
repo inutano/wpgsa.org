@@ -87,7 +87,7 @@ class TestDockerStagingAndPublishing < Minitest::Test
 
   def with_network_file
     Dir.mktmpdir do |dir|
-      path = File.join(dir, "merged_mouse_150904_trim.network")
+      path = File.join(dir, "reference.network")
       File.write(path, "network contents")
       yield path
     end

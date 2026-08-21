@@ -171,8 +171,20 @@ configure_app() {
   # WPGSA_MAX_CONCURRENT_JOBS, set as a systemd Environment= in
   # configure_systemd below.
 
-  if [ ! -f "$APP_DIR/data/merged_mouse_150904_trim.network" ]; then
-    log "reference network file is missing from the checkout"
+  # Ask config.yaml which network file the app will actually load rather
+  # than naming one here. The reference network has now been swapped twice,
+  # and a filename repeated in a second place is a second thing to remember
+  # each time: a check that names its own file goes on passing for a file
+  # the app no longer loads.
+  local network_file
+  network_file="$(ruby -ryaml -e 'print File.expand_path(YAML.load_file(ARGV[0])["network_file_path"].to_s, ARGV[1])' \
+    "$APP_DIR/config.yaml" "$APP_DIR")" || {
+    log "could not read network_file_path out of config.yaml"
+    exit 1
+  }
+
+  if [ ! -f "$network_file" ]; then
+    log "reference network file is missing from the checkout: $network_file"
     exit 1
   fi
 
