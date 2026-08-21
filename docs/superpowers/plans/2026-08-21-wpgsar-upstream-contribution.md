@@ -455,7 +455,10 @@ gh pr create --repo chiba-ai-med/wPGSAR --base main --fill
 - [ ] **Step 1: ブランチを切る**
 
 ```bash
-cd ~/repos/wPGSAR && git checkout main && git pull --ff-only
+# Branches on top of ci-check-the-code-under-review, not main: this task uses interfaces that
+# only exist on that branch until its PR merges. Open the PR with
+# --base ci-check-the-code-under-review so the diff shows only this task's change.
+cd ~/repos/wPGSAR && git checkout ci-check-the-code-under-review
 git checkout -b tests-name-what-they-check
 ```
 
@@ -464,12 +467,39 @@ git checkout -b tests-name-what-they-check
 ```bash
 cd ~/repos/wPGSAR
 printf '\nexpect_equal(length(res1), 999)\n' >> tests/testthat/test-wPGSA.R
+# library(Matrix) is needed only until Step 3a removes the helper's dependency
+# on Matrix being attached. See that step for why.
 docker run --rm -v "$PWD:/work" -w /work wpgsar-dev \
-  R -q -e 'devtools::load_all("."); testthat::test_local()' 2>&1 | tail -15
+  R -q -e 'library(Matrix); devtools::load_all("."); testthat::test_local()' 2>&1 | tail -15
 git checkout tests/testthat/test-wPGSA.R
 ```
 
 期待: 失敗は報告されるが、どの振る舞いが壊れたのかを示す名前が出ない。これが直す対象である。
+
+- [ ] **Step 3a: ヘルパーが Matrix の attach に依存しているのを直す**
+
+`tests/testthat/helper-wPGSA.R` の35行目が `Matrix(dummy_GSE143371_count, sparse=TRUE)` と
+書いており、`Matrix()` コンストラクタは本パッケージの NAMESPACE には入っていない
+（`importFrom(Matrix, ...)` は `colMeans`, `rowSums`, `sparseMatrix` の3つだけである）。
+動いていたのは `tests/testthat.R` が `library(Matrix)` を実行しているからで、
+`devtools::load_all()` + `testthat::test_local()` の経路はそれを通らないため
+`could not find function "Matrix"` で落ちる。Task 1 でこれを踏んだ。
+
+```r
+dummy_GSE143371_count_sparse <- Matrix::Matrix(dummy_GSE143371_count, sparse=TRUE)
+```
+
+以降のすべてのタスクがこの経路でテストを走らせるため、ここで直しておく。
+
+- [ ] **Step 3b: 直ったことを確認する**
+
+```bash
+cd ~/repos/wPGSAR
+docker run --rm -v "$PWD:/work" -w /work wpgsar-dev \
+  R -q -e 'devtools::load_all("."); testthat::test_local()' 2>&1 | tail -10
+```
+
+期待: `library(Matrix)` を付けずに走り、`could not find function "Matrix"` が出ない。
 
 - [ ] **Step 3: `test-wPGSA.R` を `test_that()` に包む**
 
@@ -597,7 +627,10 @@ git push -u origin tests-name-what-they-check
 - [ ] **Step 1: ブランチを切る**
 
 ```bash
-cd ~/repos/wPGSAR && git checkout main && git pull --ff-only
+# Branches on top of tests-name-what-they-check, not main: this task uses interfaces that
+# only exist on that branch until its PR merges. Open the PR with
+# --base tests-name-what-they-check so the diff shows only this task's change.
+cd ~/repos/wPGSAR && git checkout tests-name-what-they-check
 git checkout -b fix-assembly-names-and-package-metadata
 ```
 
@@ -774,7 +807,11 @@ docker run --rm -v "$PWD:/work" -w /work wpgsar-dev \
   bash -c "R CMD build . && R CMD check --no-manual wPGSAR_*.tar.gz" 2>&1 | tail -20
 ```
 
-期待: Task 1 のベースラインに出ていた vignette 関連の指摘が消える。残った指摘は `.dev/baseline-check.log` と突き合わせ、この PR で増えたものが無いことを確認する。
+期待: ベースラインの `Status: 1 WARNING, 2 NOTEs` から、`checking package dependencies ... NOTE`
+（vignette 依存）が消えて `1 WARNING, 1 NOTE` になる。残る WARNING は
+`checking data for ASCII and uncompressed saves`、残る NOTE は
+`checking for hidden files and directories` で、いずれもこの PR の対象外である。
+`.dev/baseline-check.log` と突き合わせ、増えた指摘が無いことを確認する。
 
 - [ ] **Step 11: roxygen を再生成してコミット、push する**
 
@@ -818,7 +855,10 @@ git push -u origin fix-assembly-names-and-package-metadata
 - [ ] **Step 1: ブランチを切る**
 
 ```bash
-cd ~/repos/wPGSAR && git checkout main && git pull --ff-only
+# Branches on top of fix-assembly-names-and-package-metadata, not main: this task uses interfaces that
+# only exist on that branch until its PR merges. Open the PR with
+# --base fix-assembly-names-and-package-metadata so the diff shows only this task's change.
+cd ~/repos/wPGSAR && git checkout fix-assembly-names-and-package-metadata
 git checkout -b index-the-network-by-code-not-by-string
 ```
 
@@ -1035,12 +1075,15 @@ cat("elapsed:", (proc.time()-t0)[["elapsed"]], "s  tstat:", dim(res$tstat), "\n"
 cat("R max used MB:", sum(gc(FALSE)[, "max used"] * c(8,8))/1e6, "\n")
 saveRDS(as.matrix(res$tstat), "/data/tstat_after.rds")
 EOF
+# The Bioconductor image has no GNU time; .dev/measure.sh polls VmHWM instead.
 docker run --rm -v "$PWD:/work" -v "$HOME/data/chip-atlas:/data" -w /work wpgsar-dev \
-  bash -c "/usr/bin/time -v Rscript .dev/compare_perf.R" 2>&1 | \
-  grep -E "elapsed|max used|tstat|Maximum resident"
+  bash .dev/measure.sh .dev/compare_perf.R 2>&1 | \
+  grep -E "elapsed|max used|tstat|peak_rss_gb"
 ```
 
-期待: Task 1 の 27.8 秒 / 7.16 GB に対して、10 秒未満 / 5 GB 前後。手元の測定では 8.4 秒 / 4.93 GB だった。
+期待: Task 1 が実測したベースライン（`.dev/baseline.md` に記録済み。この環境では
+33.8 秒 / ピーク 7.02 GB）に対して、10 秒台前半 / 5 GB 前後。設計時の測定では
+8.4 秒 / 4.93 GB だった。比べるのは設計書の数値ではなく `.dev/baseline.md` の数値とする。
 
 - [ ] **Step 12: 変更前の出力と突き合わせる**
 
@@ -1234,7 +1277,10 @@ git push -u origin legacy-fixture-generator
 - [ ] **Step 1: ブランチを切る**
 
 ```bash
-cd ~/repos/wPGSAR && git checkout main && git pull --ff-only
+# Branches on top of index-the-network-by-code-not-by-string, not main: this task uses interfaces that
+# only exist on that branch until its PR merges. Open the PR with
+# --base index-the-network-by-code-not-by-string so the diff shows only this task's change.
+cd ~/repos/wPGSAR && git checkout index-the-network-by-code-not-by-string
 git checkout -b per-sample-p-values
 ```
 
@@ -1466,7 +1512,10 @@ git push -u origin per-sample-p-values
 - [ ] **Step 1: ブランチを切る**
 
 ```bash
-cd ~/repos/wPGSAR && git checkout main && git pull --ff-only
+# Branches on top of per-sample-p-values, not main: this task uses interfaces that
+# only exist on that branch until its PR merges. Open the PR with
+# --base per-sample-p-values so the diff shows only this task's change.
+cd ~/repos/wPGSAR && git checkout per-sample-p-values
 git checkout -b weight-targets-by-binding-frequency
 ```
 
@@ -1599,7 +1648,7 @@ docker run --rm -e CI=true -v "$PWD:/work" -w /work wpgsar-dev \
 ```bash
 cd ~/repos/wPGSAR
 docker run --rm -v "$PWD:/work" -v "$HOME/data/chip-atlas:/data" -w /work wpgsar-dev \
-  bash -c "/usr/bin/time -v Rscript -e '
+  bash -c "Rscript -e '
     devtools::load_all(\".\"); library(data.table)
     grn <- fread(\"/data/wpgsa_GRN.mm10.5.tsv\", sep=\"\t\", header=FALSE,
                  col.names=c(\"SRX_id\",\"GeneName\"), stringsAsFactors=TRUE)

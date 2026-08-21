@@ -137,7 +137,7 @@ PR のビルドが公開タグを差し替えてしまう。
 | 同 | mm10 を `stop("Mouse Data (mm10) is not available for now...")` で拒否する | URL を追加する。`wpgsa_GRN.mm10.5.tsv`（1.01 GB）と `wpgsa_hash.mm10.5.tsv`（794 KB）はいずれも取得を確認済み |
 | `man/wPGSA.Rd` | `test.method` の既定を "t" と記載 | 実装の既定は "lm"。記述を実装に合わせる |
 | `.checkwPGSA` | エラー文が `nrow(expression_data)` と言いながら `ncol` を検査する | 文言を修正する |
-| `DESCRIPTION` | `VignetteBuilder: knitr` を宣言しているが `vignettes/` が存在しない | vignette を追加する。Bioconductor の必須要件であり、現状 R CMD check を通らない |
+| `DESCRIPTION` | `VignetteBuilder: knitr` を宣言しているが `vignettes/` が存在しない | vignette を追加する。Bioconductor の必須要件。`R CMD check` はこれを NOTE として報告する（実測）。失敗ではないため「check を通らない」は誤りで、Bioconductor 投稿時に問題になるのが正確な位置づけである |
 | `inst/NEWS` | `VERSION 0.99.1` の項が2回ある | 重複を削除する |
 
 `hg19` の扱いは非推奨警告つきの委譲とする。現に hg38 のデータを返してきた以上、
