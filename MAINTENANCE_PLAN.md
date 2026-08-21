@@ -14,7 +14,7 @@ Relevant code:
 
 - App URL helper: `app.rb`
 - Analysis launcher: `lib/wpgsa/docker.rb`
-- Network initialization: `lib/tasks/init.rake`
+- ~~Network initialization: `lib/tasks/init.rake`~~ **OBSOLETE**: This task rewrites `config.yaml` with an absolute path, which causes the working tree to be permanently dirty and prevents branch switching. The bootstrap no longer uses this task. Running `rake wpgsa:init` today will reintroduce the defect and should be avoided.
 
 ## Phase 0: Production Stabilization
 
