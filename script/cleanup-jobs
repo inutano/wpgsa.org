@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+require "json"
+
+KEEP = ["example"].freeze
+TERMINAL_STATUSES = ["finished", "failed"].freeze
+
+# A directory whose job.json reports a non-terminal status (queued, running)
+# is a job still in flight and must survive regardless of age. A directory
+# with no job.json, or with unreadable/corrupt JSON, or with no "status"
+# field, is not known to be in progress and remains eligible for age-based
+# removal -- otherwise a malformed or partial file would pin the directory
+# forever, reintroducing the unbounded-growth problem this script exists to
+# fix.
+def in_progress?(path)
+  metadata = JSON.parse(File.read(File.join(path, "job.json")))
+  status = metadata["status"]
+  return false if status.nil?
+
+  !TERMINAL_STATUSES.include?(status)
+rescue SystemCallError, JSON::ParserError
+  # SystemCallError covers every errno raised by File.read against this
+  # one path -- missing (ENOENT), unreadable (EACCES), a directory where a
+  # file was expected (EISDIR), and so on. Any failure to read or parse
+  # job.json means "not known to be in progress," not "leave it alone."
+  false
+end
+
+data_dir = ENV["WPGSA_DATA_DIR"] || File.expand_path("../public/data", __dir__)
+workdir  = ENV["WPGSA_WORKDIR"]  || "/tmp/wpgsa"
+days     = Integer(ENV["WPGSA_RETENTION_DAYS"] || "30")
+
+cutoff = Time.now - days * 86_400
+removed = 0
+failures = []
+
+# The work directory has no job.json and no notion of job status, so it is
+# always swept purely on age. The data directory additionally skips any
+# directory that looks like a job still in progress.
+[[data_dir, true], [workdir, false]].each do |root, check_status|
+  next unless File.directory?(root)
+
+  Dir.children(root).each do |name|
+    next if KEEP.include?(name)
+
+    path = File.join(root, name)
+
+    # An unanticipated error on one entry (a race with something else
+    # touching the filesystem, a permission quirk in_progress? didn't
+    # foresee, etc.) must not abort the sweep of the remaining entries in
+    # this root, and must not stop the second root from being visited at
+    # all. Report it the same way a failed removal is reported instead of
+    # letting it kill the process.
+    begin
+      next unless File.directory?(path)
+      next if File.mtime(path) > cutoff
+      next if check_status && in_progress?(path)
+
+      FileUtils.rm_rf(path)
+
+      if File.exist?(path)
+        failures << path
+      else
+        removed += 1
+      end
+    rescue StandardError => e
+      failures << "#{path} (#{e.class}: #{e.message})"
+    end
+  end
+end
+
+puts "removed #{removed} job director#{removed == 1 ? "y" : "ies"} older than #{days} days"
+
+unless failures.empty?
+  warn "failed to remove #{failures.size} director#{failures.size == 1 ? "y" : "ies"}: #{failures.join(", ")}"
+  exit 1
+end

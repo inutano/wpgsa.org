@@ -6,7 +6,6 @@ $LOAD_PATH << File.join(__dir__, "lib")
 
 require 'sinatra'
 require 'haml'
-require 'sass'
 require 'yaml'
 require 'json'
 
@@ -14,18 +13,17 @@ require 'lib/wpgsa'
 
 class WpgsaApp < Sinatra::Base
   helpers do
+    ALLOWED_FORWARDED_SCHEMES = %w[http https].freeze
+
     def app_root
-      scheme = env["HTTP_X_FORWARDED_PROTO"] || env["rack.url_scheme"]
+      forwarded = env["HTTP_X_FORWARDED_PROTO"]
+      scheme = ALLOWED_FORWARDED_SCHEMES.include?(forwarded) ? forwarded : env["rack.url_scheme"]
       "#{scheme}://#{env["HTTP_HOST"]}#{env["SCRIPT_NAME"]}"
     end
   end
 
   configure do
-    set :config, YAML.load_file("./config.yaml")
-  end
-
-  get "/:source.css" do
-    sass params[:source].intern
+    set :config, YAML.load_file(File.expand_path("config.yaml", __dir__))
   end
 
   get "/" do
@@ -37,32 +35,58 @@ class WpgsaApp < Sinatra::Base
   end
 
   get "/result" do
-    @uuid = params[:uuid] if params[:uuid]
+    if params[:uuid]
+      WPGSA.validate_data_id!(params[:uuid])
+      @uuid = params[:uuid]
+    end
     haml :result
+  rescue WPGSA::InvalidDataId
+    status 404
+    haml :not_found
   end
 
   get "/result/heatmap" do
-    @uuid = params[:uuid] if params[:uuid]
+    if params[:uuid]
+      WPGSA.validate_data_id!(params[:uuid])
+      @uuid = params[:uuid]
+    end
     haml :heatmap
+  rescue WPGSA::InvalidDataId
+    status 404
+    haml :not_found
   end
 
   post "/wpgsa/result" do
-    if params[:file]
-      workdir = settings.config["workdir"]
-      network_file_path = settings.config["network_file_path"]
-      d = WPGSA::Docker.new(params[:file], workdir, network_file_path)
-      r = d.wpgsa_results
-      if r
-        content_type "application/json"
-        JSON.dump(r)
-      else
-        warn "wPGSA execution failed: #{Time.now}"
-        warn "  Filename: #{params[:file][:filename]}"
-        warn "  File: #{params[:file][:tempfile].read}"
-        warn "  Result JSON data: #{r}"
-        status 500
-      end
+    content_type "application/json"
+
+    if !params[:file]
+      status 400
+      return JSON.dump({ "error_message" => "No file was uploaded" })
     end
+
+    workdir = settings.config["workdir"]
+    network_file_path = settings.config["network_file_path"]
+    job = WPGSA::Job.create(params[:file], workdir, network_file_path)
+    job.spawn!
+
+    status 202
+    JSON.dump({
+      "uuid" => job.uuid,
+      "status" => "queued"
+    })
+  end
+
+  get "/wpgsa/job" do
+    content_type "application/json"
+    job = WPGSA::Job.load(params[:uuid])
+    JSON.dump(job.metadata)
+  rescue WPGSA::InvalidDataId, Errno::ENOENT, JSON::ParserError
+    status 404
+    JSON.dump({
+      "uuid" => params[:uuid],
+      "status" => "unknown",
+      "error_message" => "Job not found"
+    })
   end
 
   get "/wpgsa/result" do
@@ -78,6 +102,10 @@ class WpgsaApp < Sinatra::Base
       content_type "application/json"
       result.to_json
     end
+  rescue WPGSA::InvalidDataId, Errno::ENOENT
+    status 404
+    content_type "application/json"
+    JSON.dump({ "error_message" => "Not found" })
   end
 
   not_found do

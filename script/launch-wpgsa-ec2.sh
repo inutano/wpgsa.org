@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOTSTRAP_SCRIPT="$SCRIPT_DIR/bootstrap-wpgsa-instance.sh"
 
-REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-us-east-1}}"
+REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-ap-northeast-1}}"
 INSTANCE_TYPE="${INSTANCE_TYPE:-t3.small}"
 ARCH="${ARCH:-x86_64}"
 AMI_PARAM="${AMI_PARAM:-al2023-ami-kernel-default-${ARCH}}"
@@ -18,13 +18,24 @@ EIP_ALLOCATION_ID="${EIP_ALLOCATION_ID:-}"
 SUBNET_ID="${SUBNET_ID:-}"
 VPC_ID="${VPC_ID:-}"
 SECURITY_GROUP_ID="${SECURITY_GROUP_ID:-}"
-SECURITY_GROUP_NAME="${SECURITY_GROUP_NAME:-wpgsa-web}"
-SSH_CIDR="${SSH_CIDR:-0.0.0.0/0}"
+SSH_CIDR="${SSH_CIDR:-}"
 ROOT_VOLUME_SIZE="${ROOT_VOLUME_SIZE:-30}"
 INSTANCE_PROFILE_NAME="${INSTANCE_PROFILE_NAME:-}"
 LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
 ENABLE_TLS="${ENABLE_TLS:-false}"
 TAG_SPEC="ResourceType=instance,Tags=[{Key=Name,Value=${HOSTNAME_TAG}},{Key=Project,Value=wpgsa.org}]"
+
+USER_DATA_FILE=""
+
+cleanup() {
+  # USER_DATA_FILE is a script-scope variable, initialised empty above, so
+  # this is safe to run on every exit path -- including a die() before
+  # render_user_data has ever run -- without tripping `set -u`.
+  if [ -n "$USER_DATA_FILE" ]; then
+    rm -f "$USER_DATA_FILE"
+  fi
+}
+trap cleanup EXIT INT TERM
 
 die() {
   printf 'error: %s\n' "$1" >&2
@@ -60,37 +71,6 @@ default_subnet() {
     --output text
 }
 
-ensure_security_group() {
-  local vpc_id="$1"
-  local sg_id
-
-  sg_id="$(aws ec2 describe-security-groups \
-    --region "$REGION" \
-    --filters Name=vpc-id,Values="$vpc_id" Name=group-name,Values="$SECURITY_GROUP_NAME" \
-    --query 'SecurityGroups[0].GroupId' \
-    --output text)"
-
-  if [ "$sg_id" = "None" ] || [ -z "$sg_id" ]; then
-    sg_id="$(aws ec2 create-security-group \
-      --region "$REGION" \
-      --group-name "$SECURITY_GROUP_NAME" \
-      --description "wpgsa.org web access" \
-      --vpc-id "$vpc_id" \
-      --query 'GroupId' \
-      --output text)"
-
-    aws ec2 authorize-security-group-ingress \
-      --region "$REGION" \
-      --group-id "$sg_id" \
-      --ip-permissions \
-      "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${SSH_CIDR},Description=SSH}]" \
-      "IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges=[{CidrIp=0.0.0.0/0,Description=HTTP}]" \
-      "IpProtocol=tcp,FromPort=443,ToPort=443,IpRanges=[{CidrIp=0.0.0.0/0,Description=HTTPS}]"
-  fi
-
-  printf '%s\n' "$sg_id"
-}
-
 render_user_data() {
   local tmpfile
   tmpfile="$(mktemp)"
@@ -124,20 +104,31 @@ launch_instance() {
     iam_args=(--iam-instance-profile "Name=${INSTANCE_PROFILE_NAME}")
   fi
 
-  aws ec2 run-instances \
-    --region "$REGION" \
-    --image-id "resolve:ssm:/aws/service/ami-amazon-linux-latest/${AMI_PARAM}" \
-    --instance-type "$INSTANCE_TYPE" \
-    --subnet-id "$subnet_id" \
-    --security-group-ids "$sg_id" \
-    --key-name "$KEY_NAME" \
-    --associate-public-ip-address \
-    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":${ROOT_VOLUME_SIZE},\"VolumeType\":\"gp3\",\"DeleteOnTermination\":true}}]" \
-    --tag-specifications "$TAG_SPEC" \
-    --user-data "file://${user_data_file}" \
-    "${iam_args[@]}" \
-    --query 'Instances[0].InstanceId' \
+  local cmd=(
+    aws ec2 run-instances
+    --region "$REGION"
+    --image-id "resolve:ssm:/aws/service/ami-amazon-linux-latest/${AMI_PARAM}"
+    --instance-type "$INSTANCE_TYPE"
+    --subnet-id "$subnet_id"
+    --security-group-ids "$sg_id"
+    --key-name "$KEY_NAME"
+    --associate-public-ip-address
+    --block-device-mappings "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":${ROOT_VOLUME_SIZE},\"VolumeType\":\"gp3\",\"Encrypted\":true,\"DeleteOnTermination\":true}}]"
+    --metadata-options "HttpTokens=required,HttpEndpoint=enabled"
+    --tag-specifications "$TAG_SPEC"
+    --user-data "file://${user_data_file}"
+  )
+
+  if [ "${#iam_args[@]}" -gt 0 ]; then
+    cmd+=("${iam_args[@]}")
+  fi
+
+  cmd+=(
+    --query 'Instances[0].InstanceId'
     --output text
+  )
+
+  "${cmd[@]}"
 }
 
 associate_eip() {
@@ -202,6 +193,9 @@ EOF
 main() {
   need_cmd aws
   require_env KEY_NAME
+  require_env SSH_CIDR
+  require_env SECURITY_GROUP_ID
+  [ "$SSH_CIDR" != "0.0.0.0/0" ] || die "refusing to open SSH to the whole internet; set SSH_CIDR"
   [ -f "$BOOTSTRAP_SCRIPT" ] || die "bootstrap script not found: $BOOTSTRAP_SCRIPT"
   ensure_aws_auth
 
@@ -215,15 +209,10 @@ main() {
   fi
   [ "$SUBNET_ID" != "None" ] || die "could not resolve a SUBNET_ID; set SUBNET_ID explicitly"
 
-  if [ -z "$SECURITY_GROUP_ID" ]; then
-    SECURITY_GROUP_ID="$(ensure_security_group "$VPC_ID")"
-  fi
+  local instance_id
+  USER_DATA_FILE="$(render_user_data)"
 
-  local user_data_file instance_id
-  user_data_file="$(render_user_data)"
-  trap 'rm -f "$user_data_file"' EXIT
-
-  instance_id="$(launch_instance "$SUBNET_ID" "$SECURITY_GROUP_ID" "$user_data_file")"
+  instance_id="$(launch_instance "$SUBNET_ID" "$SECURITY_GROUP_ID" "$USER_DATA_FILE")"
 
   aws ec2 wait instance-running --region "$REGION" --instance-ids "$instance_id"
   associate_eip "$instance_id"

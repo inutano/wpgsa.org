@@ -5,7 +5,7 @@ module WPGSA
     def initialize(uuid, type)
       @uuid = uuid
       @type = type
-      @data_dir = File.join(__dir__, "../../public/data", @uuid)
+      @data_dir = WPGSA.data_dir(uuid)
     end
 
     def read
@@ -18,7 +18,7 @@ module WPGSA
     end
 
     def result_file_path
-      case @type
+      path = case @type
       when "p-value"
         p_value
       when "q-value"
@@ -30,6 +30,8 @@ module WPGSA
       when "network"
         network_data
       end
+      raise Errno::ENOENT, @data_dir if path.nil?
+      path
     end
 
     def p_value
@@ -52,9 +54,17 @@ module WPGSA
       glob("hclust.js")
     end
 
+    # job.json and job.log are written into this same directory (see
+    # lib/wpgsa/job.rb) but are job bookkeeping, not the uploaded input
+    # file. Both sort ahead of a typical input filename, so without this
+    # exclusion the result page would report "job.json" as the uploaded
+    # filename for every real job.
+    NON_INPUT_BASENAMES = ["job.json", "job.log"].freeze
+
     def input_data
       fpath = Dir.glob(@data_dir+"/*").select do |f|
-        f != p_value && f != q_value && f != t_score && f != network_data && f != hclust
+        f != p_value && f != q_value && f != t_score && f != network_data && f != hclust &&
+          !NON_INPUT_BASENAMES.include?(File.basename(f))
       end
       fpath[0]
     end

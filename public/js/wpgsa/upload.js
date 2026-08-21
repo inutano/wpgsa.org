@@ -52,36 +52,103 @@ var UserData = {
   }
 };
 
+var UserJob = {
+  status: function(uuid){
+    var defer = $.Deferred();
+    $.ajax({
+      url: '/wpgsa/job?uuid=' + uuid,
+      type: 'GET',
+      dataType: 'json',
+      success: defer.resolve,
+      error: defer.reject
+    });
+    return defer.promise();
+  }
+};
+
 function uploadExpressionData(){
   $('input#uploadUserDataFile').on('click', function(){
     // start upload sequence
     startLoading();
     var button = $(this);
-    button.prop("disable", true);
+    button.prop("disabled", true);
 
     // get upload data
     var formData = new FormData($('form#uploadUserDataFile').get(0));
     UserData.upload(formData).done(function(json){
-      var tScoreDataPath = $.grep(json, function(url){ return url.includes("t_score"); });
-      var uuid = tScoreDataPath[0].split("/")[1];
-      var redirectUrl = '/result?uuid=' + uuid
-      // finish upload sequence
-      removeLoading();
-      button.prop("disable", false);
-      // open result page
-      window.open(redirectUrl, "_self", "");
+      pollJobStatus(json.uuid, button);
     }).fail(function(json){
       // finish upload sequence
       removeLoading();
-      button.prop("disable", false);
+      button.prop("disabled", false);
       alert("An error occurred during the process.\n\nCheck your file format and make sure to use recommended browsers (Latest Google Chrome or Safari). If you can not solve this problem yourself, contact us from 'report issues' on menu bar.");
     });
     return false;
   });
 }
 
+// Wall-clock cap on how long the client will keep polling a job that never
+// reaches a terminal status. Analyses normally take minutes; 30 minutes
+// gives ample headroom while still guaranteeing the user is not left on a
+// spinner forever if the runner dies without writing a terminal status (see
+// lib/wpgsa/job.rb and script/run-job for the ways that can happen).
+var POLL_TIMEOUT_MS = 30 * 60 * 1000;
+
+function pollJobStatus(uuid, button, deadline){
+  if (deadline === undefined) {
+    deadline = Date.now() + POLL_TIMEOUT_MS;
+  }
+
+  UserJob.status(uuid).done(function(job){
+    switch(job.status) {
+    case "finished":
+      removeLoading();
+      button.prop("disabled", false);
+      window.open('/result?uuid=' + uuid, "_self", "");
+      break;
+    case "failed":
+      removeLoading();
+      button.prop("disabled", false);
+      var msg = "An error occurred during the process.";
+      if (job.error_message) {
+        msg += "\n\n" + job.error_message;
+      }
+      alert(msg);
+      break;
+    default:
+      if (Date.now() >= deadline) {
+        pollTimedOut(uuid, button);
+        break;
+      }
+      startLoading("Data uploaded, analysis in progress. This may take a while..");
+      setTimeout(function(){
+        pollJobStatus(uuid, button, deadline);
+      }, 3000);
+      break;
+    }
+  }).fail(function(){
+    if (Date.now() >= deadline) {
+      pollTimedOut(uuid, button);
+      return;
+    }
+    setTimeout(function(){
+      pollJobStatus(uuid, button, deadline);
+    }, 3000);
+  });
+}
+
+function pollTimedOut(uuid, button){
+  removeLoading();
+  button.prop("disabled", false);
+  alert("The analysis did not complete within 30 minutes.\n\nJob ID: " + uuid + "\n\nPlease report this issue and include the job ID above.");
+}
+
 function startLoading(msg){
-  var msg = "Data uploaded, started analysis. This may take a while.."
+  var msg = msg || "Data uploaded, started analysis. This may take a while.."
+  if ($(".loading .msg").length > 0) {
+    $(".loading .msg").text(msg);
+    return;
+  }
   var span = "<span class='msg'>" + msg + "</span>";
   var dispMsg = "<div class='loadingMsg'>" + span + "</div>";
   if ($(".loading").length == 0) {

@@ -1,0 +1,67 @@
+body {
+  margin-top: 86px;
+  line-height: 1.5; }
+
+footer {
+  margin-top: 10em;
+  margin-bottom: 5em;
+  text-align: center;
+  text-transform: uppercase;
+  font-style: italic;
+  font-size: 66%; }
+
+p.acknowledgement {
+  margin-top: 0.5em; }
+
+a.downloadLink {
+  display: block;
+  width: 100%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em; }
+
+.linkExample {
+  margin-top: 1em; }
+
+.loading {
+  margin-top: 1em;
+  font-style: italic; }
+
+.loading .loadingMsg {
+  height: 40px;
+  line-height: 40px;
+  padding-left: 3.5em;
+  background-image: url("/images/loading.gif");
+  background-position: left top;
+  background-repeat: no-repeat; }
+
+span.msg {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: normal; }
+
+.navButton {
+  margin-top: 1.5em; }
+
+.helpButton {
+  padding: 13 16; }
+
+.userData {
+  margin: 2em; }
+
+.panel-body-desc {
+  padding: 2em 4em; }
+
+.modal-dialog {
+  margin-top: 200px; }
+
+.modal-body {
+  padding-top: 1em;
+  padding-left: 2em;
+  padding-right: 2em;
+  padding-bottom: 2em; }
+
+img[alt=dataformat] {
+  width: 1000px; }
+
+.expLab {
+  word-wrap: break-word; }

@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH << File.expand_path("..", __dir__)
+$LOAD_PATH << File.expand_path("../lib", __dir__)
+
+require "yaml"
+require "lib/wpgsa"
+
+uuid = ARGV[0]
+abort("missing uuid") if !uuid || uuid.empty?
+
+config_path = File.expand_path("../config.yaml", __dir__)
+config = File.exist?(config_path) ? YAML.load_file(config_path) : {}
+concurrency = Integer(config["max_concurrent_jobs"] || 2)
+
+job = begin
+  WPGSA::Job.load(uuid)
+rescue WPGSA::InvalidDataId
+  abort("invalid uuid")
+end
+
+# lib/wpgsa/job.rb#spawn! no longer redirects this process's stdout/
+# stderr straight to job.log -- that raw stream is a carriage-return
+# progress bar from the wpgsa container and needs filtering (see
+# WPGSA::LogFilter) before it is worth keeping. Fork a sibling process
+# that reads this process's stdout/stderr through a pipe, filters it,
+# and appends the result to the real log file; then reopen our own
+# stdout/stderr onto the pipe so both this script's own output and
+# anything the docker containers it shells out to write (they inherit
+# these same file descriptors) flow through it. The filter process is
+# detached, not a thread inside this one, so it keeps draining and
+# writing the log for as long as this runner is alive.
+reader, writer = IO.pipe
+filter_pid = fork do
+  writer.close
+  reader.binmode
+  File.open(job.metadata_log_path, "a") do |log|
+    log.binmode
+    filter = WPGSA::LogFilter.new(log)
+    while (chunk = reader.read(65_536))
+      filter << chunk
+    end
+    filter.finish
+  end
+end
+reader.close
+Process.detach(filter_pid)
+
+writer.binmode
+$stdout.reopen(writer)
+$stderr.reopen(writer)
+writer.close
+
+job.run!(concurrency: concurrency)
