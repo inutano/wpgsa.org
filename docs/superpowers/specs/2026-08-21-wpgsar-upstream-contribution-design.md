@@ -42,7 +42,7 @@ TF ごとに異なり、実測の t 値比の分位数と完全に一致した�
 
 ```
 issue #1  統計定義の確認（分母、検定の向き）      PR5 のみを止める
-PR0  テスト基盤の整備                            議論不要
+PR0  テスト基盤と CI の整備                      議論不要
 PR1  事実誤りとパッケージ整備                    議論不要
 PR2  性能とメモリ                                振る舞い不変
 PR3  サンプルごとの p 値・q 値                   戻り値への追加、後方互換
@@ -70,9 +70,54 @@ PR5 だけが issue #1 に依存する。
 
 Kawakami 氏は原論文と wPGSAR の双方の著者であるため、この場で決着させられる。
 
-## PR0: テスト基盤の整備
+## PR0: テスト基盤と CI の整備
 
-現状 `tests/testthat/*.R` は `test_that()` ブロックを使わず裸の `expect_*` を
+以降の PR がすべてこの基盤の上に乗るため、最初に出す。
+現状では後続 PR のテストを足しても CI では一度も実行されないため、
+この PR は他のどれよりも先に必要である。
+
+### CI が PR のコードを検査していない
+
+`.github/workflows/build_test_push.yml` は `docker build` を実行するだけであり、
+その `Dockerfile` は次のように書かれている。
+
+```dockerfile
+RUN R -e "... devtools::install_github('chiba-ai-med/wPGSAR', \
+    upgrade='always', force=TRUE, INSTALL_opts = '--install-tests');\
+    tools::testInstalledPackage('wPGSAR')"
+```
+
+チェックアウトしたソースではなく GitHub の `main` からインストールするため、
+PR で変更したコードは CI で一度も実行されない。
+`tools::testInstalledPackage` はテスト失敗時も非ゼロ終了しないため、
+仮にソースを見ていたとしても失敗はビルドを止めない。
+
+変更点:
+
+- `R CMD build` と `R CMD check` を `bioconductor/bioconductor_docker:RELEASE_3_20` 上で
+  チェックアウトしたソースに対して実行するワークフローを追加する
+- `Dockerfile` をローカルソースからのインストールに変える
+  （`COPY . /wPGSAR` と `R CMD INSTALL --install-tests /wPGSAR`）
+
+### PR ビルドが latest を上書きしている
+
+同ワークフローは `on: pull_request` でも `ghcr.io/<owner>/wpgsar:latest` を push する。
+PR のビルドが公開タグを差し替えてしまう。
+
+変更点:
+
+- push は `main` への push と `workflow_dispatch` のときだけに限定し、
+  `pull_request` ではビルドと検査までとする
+
+### 非推奨の記法
+
+- `::set-output` は GitHub 側で廃止済みであり、`$GITHUB_OUTPUT` に置き換える
+- `actions/checkout@v2`、`docker/login-action@v1`、`docker/build-push-action@v1` を
+  現行のメジャーバージョンに更新する
+
+### テストの構造
+
+`tests/testthat/*.R` は `test_that()` ブロックを使わず裸の `expect_*` を
 並べているため、失敗しても どのテストが落ちたか出力されない。
 また `test-retrieveNetworkData.R` は CI で実際に 1.2 GB を取得しに行く。
 
@@ -81,8 +126,6 @@ Kawakami 氏は原論文と wPGSAR の双方の著者であるため、この場
 - 既存のアサーションを `test_that()` ブロックに包み、期待する振る舞いを名前にする
 - `retrieveNetworkData` のテストを小さなフィクスチャに差し替え、
   実ダウンロードを伴うものは `skip_on_ci()` を付ける
-
-以降の PR がすべてこの基盤の上に乗るため、最初に出す。
 
 ## PR1: 事実誤りとパッケージ整備
 
@@ -165,7 +208,13 @@ wPGSA(network_data, expression_data, group = NULL,
 
 `alternative` の既定は `"two.sided"` とする。論文の帰無仮説が両側であり、
 R の `t.test` / `wilcox.test` の作法にも沿う。
-`"greater"` を選べば旧サイトの片側 p 値を再現できる。
+
+レガシー実装の p 値は `scipy.stats.t.sf(abs(t_score), df)` であり、
+絶対値を取っているため `alternative = "greater"` とは一致しない
+（t が負のとき `greater` は 0.5 を超えるが、レガシーは常に 0.5 未満を返す）。
+実体は両側 p 値のちょうど半分である。
+したがってレガシー互換のための引数は追加せず、
+ゴールデンテストは「両側 p 値の半分がレガシーの出力と一致する」ことで書く。
 
 `tstat_fdr` はサンプルごとに Benjamini-Hochberg 補正を掛ける。
 レガシー実装が時点ごとに `p.adjust(method="BH")` を掛けていたのと同じ単位である。
@@ -182,6 +231,20 @@ df = (n - 1) * (v_bg + v_target)^2 / (v_bg^2 + v_target^2)
 そこで PR3 では、標準誤差と自由度の双方が参照する内部量を `n_eff` として
 1箇所に集約する。PR5 は `n_eff` の定義を変えるだけになり、
 issue #1 の決着を待たずに PR3 を出せる。
+
+`n_eff` の候補は2つではなく3つある点に注意する。
+
+| 候補 | 定義 | 使っているもの |
+|---|---|---|
+| `weights` | 共通遺伝子上の重み合計 Σw | wPGSAR の現行 |
+| `targets` | 共通遺伝子上の標的遺伝子数 | どちらでもない |
+| `targets_all` | ネットワーク全体での標的遺伝子数 | レガシー実装 |
+
+レガシーは発現データに存在しない標的遺伝子まで数に含めるため `targets_all` になる。
+相互参照フィクスチャを再現するにはこの区別が要る。
+`targets_all` は絞り込み前のネットワークから計算する必要があるため、
+`n_eff` を求める関数は絞り込み前後の双方を受け取る形にする。
+既定は issue #1 が決着するまで `weights`（現行の振る舞い）を維持する。
 
 ## PR4: TF単位への集約と k/n 重み
 
@@ -251,8 +314,9 @@ issue #1 の結論により3通りに分岐する。
 切り詰めたものを 2016年のコンテナ `inutano/wpgsa:0.5.2` に通し、
 入力と出力の対を `inst/extdata` に置く。
 
-wPGSAR 側は `alternative = "greater"` かつレガシーの分母設定でこれを
-再現できなければならない、というゴールデンテストとする。
+wPGSAR 側はレガシーの分母設定でこれを再現できなければならない、
+というゴールデンテストとする。t 値は直接比較し、
+p 値は「両側 p 値の半分がレガシーの出力と一致する」ことで比較する。
 論文実装との一致が回帰テストとして固定され、
 今回のような食い違いが静かに入ることを防げる。
 
