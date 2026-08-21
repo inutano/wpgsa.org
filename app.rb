@@ -23,7 +23,13 @@ class WpgsaApp < Sinatra::Base
   end
 
   configure do
-    set :config, YAML.load_file(File.expand_path("config.yaml", __dir__))
+    config = YAML.load_file(File.expand_path("config.yaml", __dir__))
+    # network_file_path in config.yaml is a relative path so the tracked
+    # file is identical on every host. Resolve it against the app root
+    # here rather than rewriting the file at provision time -- see
+    # WPGSA.resolve_app_path.
+    config["network_file_path"] = WPGSA.resolve_app_path(config["network_file_path"])
+    set :config, config
   end
 
   get "/" do
