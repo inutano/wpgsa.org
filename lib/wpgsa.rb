@@ -10,6 +10,7 @@ module WPGSA
 
   UUID_PATTERN = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
   EXAMPLE_ID = "example".freeze
+  APP_ROOT = File.expand_path(File.join(__dir__, "..")).freeze
   DATA_ROOT = File.expand_path(File.join(__dir__, "../public/data")).freeze
 
   def self.valid_data_id?(id)
@@ -23,6 +24,22 @@ module WPGSA
     raise InvalidDataId, "invalid data id" unless valid_data_id?(id)
 
     id
+  end
+
+  # Resolves a config value that names a file somewhere under the
+  # application, without requiring the value itself to be host-specific.
+  # A relative path is expanded against `root` (the application root by
+  # default); an absolute path is returned untouched (only normalized),
+  # so a deployer who deliberately overrides the setting with an
+  # absolute path keeps working.
+  #
+  # This is what lets config.yaml's network_file_path stay a single
+  # relative value that is correct on every host, instead of needing to
+  # be rewritten to an absolute path at provision time -- a rewrite that
+  # permanently dirtied the tracked file and broke `git checkout` on the
+  # provisioned host.
+  def self.resolve_app_path(path, root: APP_ROOT)
+    File.expand_path(path, root)
   end
 
   # True iff `path`, once expanded, genuinely sits inside `root` (also

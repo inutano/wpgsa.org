@@ -160,11 +160,16 @@ checkout_app() {
 
 configure_app() {
   log "configuring app"
-  cat > "$APP_DIR/config.yaml" <<EOF
-workdir: "/tmp/wpgsa"
-network_file_path: "$APP_DIR/data/merged_mouse_150904_trim.network"
-max_concurrent_jobs: ${MAX_CONCURRENT_JOBS:-2}
-EOF
+  # config.yaml is tracked in git and, as of the fix for the config-rewrite
+  # bug, is correct as checked in: network_file_path is a relative path
+  # that app.rb (WPGSA.resolve_app_path) resolves against the app root at
+  # load time, so it does not need to be host-specific. Writing over it
+  # here would dirty the tracked file on every provisioned host exactly
+  # the way it used to -- breaking `git pull --ff-only` / `git checkout`
+  # the next time this host is switched to a different branch. Do not
+  # reintroduce that write. MAX_CONCURRENT_JOBS is honoured instead via
+  # WPGSA_MAX_CONCURRENT_JOBS, set as a systemd Environment= in
+  # configure_systemd below.
 
   if [ ! -f "$APP_DIR/data/merged_mouse_150904_trim.network" ]; then
     log "reference network file is missing from the checkout"
@@ -214,6 +219,10 @@ User=$APP_USER
 Group=$APP_GROUP
 WorkingDirectory=$APP_DIR
 Environment=RACK_ENV=production
+# Overrides config.yaml's checked-in max_concurrent_jobs (see script/run-job)
+# without writing to the tracked file. Set MAX_CONCURRENT_JOBS before running
+# this bootstrap script to tune concurrency for a given host.
+Environment=WPGSA_MAX_CONCURRENT_JOBS=${MAX_CONCURRENT_JOBS:-2}
 ExecStart=/usr/bin/env bundle exec puma -C $APP_DIR/config/puma.rb
 ExecReload=/bin/kill -USR2 \$MAINPID
 Restart=always

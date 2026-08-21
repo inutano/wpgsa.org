@@ -11,7 +11,12 @@ abort("missing uuid") if !uuid || uuid.empty?
 
 config_path = File.expand_path("../config.yaml", __dir__)
 config = File.exist?(config_path) ? YAML.load_file(config_path) : {}
-concurrency = Integer(config["max_concurrent_jobs"] || 2)
+# WPGSA_MAX_CONCURRENT_JOBS, when set, overrides config.yaml's
+# max_concurrent_jobs. This is how a deploy tunes concurrency per host
+# (systemd Environment=) without rewriting the tracked config file --
+# see configure_app/configure_systemd in
+# script/bootstrap-wpgsa-instance.sh.
+concurrency = Integer(ENV["WPGSA_MAX_CONCURRENT_JOBS"] || config["max_concurrent_jobs"] || 2)
 
 job = begin
   WPGSA::Job.load(uuid)

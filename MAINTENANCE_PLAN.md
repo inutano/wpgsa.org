@@ -14,7 +14,7 @@ Relevant code:
 
 - App URL helper: `app.rb`
 - Analysis launcher: `lib/wpgsa/docker.rb`
-- Network initialization: `lib/tasks/init.rake`
+- ~~Network initialization: `lib/tasks/init.rake`~~ **REMOVED**: This task rewrote `config.yaml` with an absolute path, which caused the working tree to be permanently dirty and prevented branch switching on the live host. The bootstrap no longer used this task, and nothing else invoked it, so it was deleted.
 
 ## Phase 0: Production Stabilization
 
